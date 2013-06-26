@@ -1,9 +1,9 @@
 <section class="grid" ng-controller="GridCtrl">
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" ng-style="mapBackgroundCssObject()" height="{{ gridHeight }}" width="100%">
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" ng-style="mapBackgroundCssObject()" height="{{ gridHeight }}" width="100%" ng-mousedown="startPan($event)" ng-mouseup="stopPan($event)" ng-mousemove="pan($event)" ng-mouseleave="stopPan($event)">
         <defs>
             <pattern x="0" y="0" width="32" height="32" id="gridPattern"
                     patternUnits="userSpaceOnUse"
-                    patternTransform="translate(11 239) scale(1)">
+                    patternTransform="translate({{translate.x}}, 8) scale(1)">
 
             <rect
                     x="0"

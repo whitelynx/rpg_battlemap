@@ -191,9 +191,9 @@ Controllers.controller("HeaderCtrl", function($scope) {
 });
 
 Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
-	var header = angular.element("#main-header");
+	var header = $("#main-header");
 	var topBar = $("#top-bar");
-	var docElem = angular.element(window);
+	var docElem = $(window);
 
 	function calcGridheight(buffer) {
 		buffer = buffer || 0;
@@ -226,6 +226,34 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 	});
 
 	$scope.gridHeight = calcGridheight(header.height() + 15);
+
+	$scope.translate = {x: 0, y: 0};
+	$scope.scale = 1;
+
+	var dragData = {
+		panning: false
+	};
+
+	$scope.startPan = function(ev){
+		console.log('starting pan', ev);
+		dragData.lastX = ev.pageX;
+		dragData.lastY = ev.pageY;
+		dragData.panning = true;
+	};
+	$scope.stopPan = function(ev){
+		dragData.panning = false;
+	};
+	$scope.pan = function(ev){
+		if(! dragData.panning){
+			return;
+		}
+		var deltaX = ev.pageX - dragData.lastX;
+		var deltaY = ev.pageY - dragData.lastY;
+		dragData.lastX = event.pageX;
+		dragData.lastY = event.pageY;
+		$scope.translate.x = $scope.translate.x + deltaX;
+		$scope.translate.y = $scope.translate.y + deltaY;
+	}
 });
 
 //----------------------------------------------------------------------------------------------------------------------
