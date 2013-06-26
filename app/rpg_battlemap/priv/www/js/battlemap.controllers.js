@@ -254,6 +254,20 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 		$scope.translate.x = $scope.translate.x + deltaX;
 		$scope.translate.y = $scope.translate.y + deltaY;
 	}
+
+	$scope.zoom = function(ev){
+		console.log('der zoom', ev, arguments);
+		var newZoom = $scope.scale - ev.deltaY
+		$scope.scale += ev.deltaY;
+		if(newZoom < 0.1){
+			newZoom = 0.1;
+		} else if(newZoom > 3){
+			newZoom = 3
+		}
+		$scope.scale = newZoom;
+		ev.preventDefault();
+		return false;
+	}
 });
 
 //----------------------------------------------------------------------------------------------------------------------

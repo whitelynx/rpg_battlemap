@@ -1,5 +1,5 @@
 <section class="grid" ng-controller="GridCtrl">
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" ng-style="mapBackgroundCssObject()" height="{{ gridHeight }}" width="100%" ng-mousedown="startPan($event)" ng-mouseup="stopPan($event)" ng-mousemove="pan($event)" ng-mouseleave="stopPan($event)">
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" ng-style="mapBackgroundCssObject()" height="{{ gridHeight }}" width="100%" ng-mousedown="startPan($event)" ng-mouseup="stopPan($event)" ng-mousemove="pan($event)" ng-mouseleave="stopPan($event)" ng-mousewheel="zoom($event);" msd-wheel="zoom($event);">
         <defs>
             <pattern x="0" y="0" width="32" height="32" id="gridPattern"
                     patternUnits="userSpaceOnUse"
