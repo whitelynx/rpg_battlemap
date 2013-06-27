@@ -136,14 +136,16 @@ create_authed_session() ->
 
 create_authed_session(SessionId) ->
 	User = #rpgb_rec_user{
-		name = <<"test_user">>
+		name = <<"test_user">>,
+		email = <<"test_user@example.com">>
 	},
 	{ok, User1} = rpgb_data:save(User),
 	create_authed_session(SessionId, User1).
 
 create_authed_session(SessionId, User) when is_binary(User) ->
 	UserRec = #rpgb_rec_user{
-		name = User
+		name = User,
+		email = <<User/binary, "@example.com">>
 	},
 	{ok, UserRec1} = rpgb_data:save(UserRec),
 	create_authed_session(SessionId, UserRec1);
