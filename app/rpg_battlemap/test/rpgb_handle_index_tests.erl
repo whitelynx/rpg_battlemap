@@ -16,8 +16,8 @@ request_test_() ->
 			rpgb_session:make_ets(),
 			%?debugFmt("The sessions:  ~p", [ets:match(rpgb_session, '$1')]),
 			{ok, "200", _Heads, Body} = ibrowse:send_req("http://localhost:9094/", [], get),
-			{ok, Regex} = re:compile("Sign in"),
-			?assertMatch({match, [{_,_}]}, re:run(Body, Regex))
+			{ok, Regex} = re:compile("Sign Out"),
+			?assertNotMatch({match, [{_,_}]}, re:run(Body, Regex))
 		end},
 
 		{"access while logged in", fun() ->
