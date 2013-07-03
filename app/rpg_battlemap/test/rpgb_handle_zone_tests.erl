@@ -78,16 +78,15 @@ initial_state() ->
 	rpgb_data:save(#rpgb_rec_layer{
 		name = <<"primary layer">>,
 		id = ?layerid,
-		battlemap_id = ?mapid,
-		next_layer_id = undefined
+		battlemap_id = ?mapid
 	}),
 	Map = #rpgb_rec_battlemap{
 		id = ?mapid,
 		owner_id = User#rpgb_rec_user.id,
 		participant_ids = [P1#rpgb_rec_user.id, P2#rpgb_rec_user.id],
-		bottom_layer_id = ?layerid
+		layer_ids = [?layerid]
 	},
-	{ok, Map2} = rpgb_data:save(Map),
+	{ok, _Map2} = rpgb_data:save(Map),
 	#state{zones = [], auras = []}.
 
 command(S) ->
@@ -243,8 +242,8 @@ g_path_segment_data(HV) when HV =:= $h; HV =:= $H; HV =:= $v; HV =:= $V ->
 g_path_segment_data(C) when C =:= $c; C =:= $C ->
 	?LET(Curves, list({g_point(), g_point(), g_point()}),
 		begin
-			Curves2 = lists:flatten([[A,B,C,D,E,F] || {{A,B},{C,D},{E,F}} <- Curves]),
-			string:join([[C]] ++ [integer_to_list(C) || C <- Curves2], " ")
+			Curves2 = lists:flatten([[A,B,C2,D,E,F] || {{A,B},{C2,D},{E,F}} <- Curves]),
+			string:join([[C]] ++ [integer_to_list(C2) || C2 <- Curves2], " ")
 		end);
 g_path_segment_data(S) when S =:= $s; S =:= $S; S =:= $q; S =:= $Q ->
 	?LET(Curves, list({g_point(), g_point()}),
@@ -270,9 +269,9 @@ g_point() ->
 %% preconditions
 %% =======================================================
 
-precondition(S, {call, _, update_zone, [_Put, Nth, Nth, _S]}) ->
+precondition(_S, {call, _, update_zone, [_Put, Nth, Nth, _S]}) ->
 	false;
-precondition(S, {call, _, update_aura, [_Put, Nth, Nth, _Who, _S]}) ->
+precondition(_S, {call, _, update_aura, [_Put, Nth, Nth, _Who, _S]}) ->
 	false;
 precondition(S, {call, _, Call, _}) ->
 	Needs = [
@@ -310,10 +309,10 @@ next_state(#state{auras = Auras} = State, Res, {call, _, create_aura, [_Put, _Na
 	end,
 	State#state{auras = Auras2};
 
-next_state(#state{zones = Zones} = State, Res, {call, _, delete_zone, [Nth, _]}) ->
+next_state(#state{zones = Zones} = State, _Res, {call, _, delete_zone, [Nth, _]}) ->
 	State#state{zones = rpgb:snip(Nth, Zones)};
 
-next_state(#state{auras = Auras} = State, Res, {call, _, delete_aura, [Nth, _, _]}) ->
+next_state(#state{auras = Auras} = State, _Res, {call, _, delete_aura, [Nth, _, _]}) ->
 	State#state{auras = rpgb:snip(Nth, Auras)};
 
 next_state(State, Res, {call, _, update_zone, [_Put, Nth, MaybeNext, _S]}) ->
@@ -439,7 +438,7 @@ postcondition(State, {call, _, create_zone, [Put, Name, Next, _]}, {ok, "201", _
 	?assert(rpgb_test_util:assert_body(Json3, Body)),
 	true;
 
-postcondition(State, {call, _, create_aura, [Put, Name, Next, Who, _]}, {ok, "201", _, Body}) ->
+postcondition(State, {call, _, create_aura, [Put, Name, Next, _Who, _]}, {ok, "201", _, Body}) ->
 	#state{auras = Auras} = State,
 	NextZoneId = get_next(Next, Auras),
 	Json = [{<<"next_zone_id">>, NextZoneId} | Put],
@@ -495,10 +494,10 @@ postcondition(State, {call, _, update_zone, [Put, Nth, MaybeNext, _S]}, Res) ->
 postcondition(State, {call, _, update_aura, [Put, Nth, MaybeNext, _Who, _S]}, Res) ->
 	postcondition_update(Put, Nth, MaybeNext, State#state.auras, Res);
 
-postcondition(State, {call, _, delete_zone, _}, {ok, "204", _, _}) ->
+postcondition(_State, {call, _, delete_zone, _}, {ok, "204", _, _}) ->
 	true;
 
-postcondition(State, {call, _, delete_aura, _}, {ok, "204", _, _}) ->
+postcondition(_State, {call, _, delete_aura, _}, {ok, "204", _, _}) ->
 	true;
 
 postcondition(S, C, R) ->
@@ -535,7 +534,7 @@ postcondition_update(Put, Nth, MaybeNext, _, {_, Status, _, Body}) ->
 
 proplists_update([], PL) ->
 	PL;
-proplists_update([{K,V} = KV | Tail], Pl) ->
+proplists_update([{K,_V} = KV | Tail], Pl) ->
 	Pl2 = [KV | proplists:delete(K, Pl)],
 	proplists_update(Tail, Pl2).
 

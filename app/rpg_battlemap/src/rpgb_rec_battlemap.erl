@@ -10,7 +10,8 @@
 -export([update_from_json/2]).
 
 make_json(Map) ->
-	Layers = rpgb_rec_layer:get_map_layers(Map#rpgb_rec_battlemap.bottom_layer_id),
+	Layers1 = [rpgb_data:get_by_id(rpgb_rec_layer, Id) || Id <- Map#rpgb_rec_battlemap.layer_ids],
+	Layers = [LayerRec || {ok, LayerRec} <- Layers1],
 	Combatants = rpgb_rec_combatant:get_map_combatants(Map#rpgb_rec_battlemap.first_combatant_id),
 	make_json(Map, Layers, Combatants).
 
@@ -18,15 +19,15 @@ make_json(Map, Layers, Combatants) ->
 	Url = rpgb:get_url(["maps", integer_to_list(Map#rpgb_rec_battlemap.id)]),
 	<<"http", RestUrl/binary>> = Url,
 	WebSocket = <<"ws", RestUrl/binary, "/ws">>,
-	MakeLayerJson = fun(InJson, _InMap) ->
-		LayersJsons = [rpgb_rec_layer:make_json(Layer) || Layer <- Layers],
-		[{layers, LayersJsons} | InJson]
-	end,
 	MakeCombatantJson = fun(InJson, _InMap) ->
 		CombatantsJsons = [rpgb_rec_combatant:make_json(Combatant) || Combatant <- Combatants],
 		[{combatants, CombatantsJsons} | InJson]
 	end,
-	Map:to_json([{url, Url},{websocketUrl, WebSocket}, bottom_layer_id, MakeLayerJson, first_combatant_id, MakeCombatantJson, fun expand_owner/2, fun expand_particpants/2]).
+	MakeLayerJson = fun(InJson, _InMap) ->
+		LayerJsons = [rpgb_rec_layer:make_json(Layer) || Layer <- Layers],
+		[{layers, LayerJsons} | InJson]
+	end,
+	Map:to_json([{url, Url},{websocketUrl, WebSocket}, layer_ids, MakeLayerJson, first_combatant_id, MakeCombatantJson, fun expand_owner/2, fun expand_particpants/2]).
 
 get_by_participant(#rpgb_rec_user{id = UserId}) ->
 	get_by_participant(UserId);
@@ -243,4 +244,4 @@ expand_particpants(Json, Map) ->
 				[User#rpgb_rec_user.email | Acc]
 		end
 	end, [], Map#rpgb_rec_battlemap.participant_ids),
-	[{<<"participant">>, lists:reverse(PartyNames)} | Json].
+	[{<<"participants">>, lists:reverse(PartyNames)} | Json].

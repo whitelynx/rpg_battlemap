@@ -18,14 +18,14 @@ get_routes() ->
 		<<"/maps/:mapid/layers/:layerid">>
 	].
 
-init(_Protos, Req, _HostPort) ->
+init(_Protos, _Req, _HostPort) ->
 	{upgrade, protocol, cowboy_rest}.
 
 rest_init(Req, [HostPort]) ->
 	{ok, Session, Req1} = rpgb_session:get_or_create(Req),
 	%?debug("Session:  ~p", [Session]),
-	{Path, Req2} = cowboy_req:path(Req1),
-	{MapId, Req3} = cowboy_req:binding(mapid, Req2),
+	%{Path, Req2} = cowboy_req:path(Req1),
+	{MapId, Req3} = cowboy_req:binding(mapid, Req1),
 	MapId1 = case MapId of
 		undefined ->
 			undefined;
@@ -53,7 +53,7 @@ rest_init(Req, [HostPort]) ->
 	{ok, Req4, #ctx{hostport = HostPort, session = Session, mapid = MapId1, layerid = LayerId1}}.
 
 allowed_methods(Req, #ctx{layerid = LayerId} = Ctx) when is_atom(LayerId) ->
-	{[<<"GET">>, <<"PUT">>, <<"HEAD">>], Req, Ctx};
+	{[<<"GET">>, <<"POST">>, <<"HEAD">>], Req, Ctx};
 
 allowed_methods(Req, Ctx) ->
 	{[<<"GET">>, <<"PUT">>, <<"HEAD">>, <<"DELETE">>], Req, Ctx}.
@@ -62,7 +62,7 @@ is_authorized(Req, #ctx{session = Session} = Ctx) ->
 	case rpgb_session:get_user(Session) of
 		undefined ->
 			{{false, <<"post">>}, Req, Ctx};
-		User ->
+		_User ->
 			{true, Req, Ctx}
 	end.
 
@@ -88,10 +88,10 @@ forbidden(Req, #ctx{mapid = MapId, session = Session} = Ctx) ->
 
 resource_exists(Req, #ctx{layerid = maplayers} = Ctx) ->
 	case cowboy_req:method(Req) of
-		{<<"PUT">>, Req2} ->
+		{<<"POST">>, Req2} ->
 			{false, Req2, Ctx};
 		{_, Req2} ->
-			{true, Req, Ctx}
+			{true, Req2, Ctx}
 	end;
 resource_exists(Req, #ctx{layerid = LayerId} = Ctx) ->
 	{ok, Layer} = rpgb_data:get_by_id(rpgb_rec_layer, LayerId),
@@ -107,36 +107,29 @@ delete_resource(Req, #ctx{mapid = MapId} = Ctx) ->
 			{halt, Req3, Ctx};
 		_ ->
 			#ctx{map = Map, layerid = LayerId, layer = Layer} = Ctx,
-			case Map#rpgb_rec_battlemap.bottom_layer_id of
-				LayerId ->
-					Map1 = Map#rpgb_rec_battlemap{bottom_layer_id = Layer#rpgb_rec_layer.next_layer_id},
-					rpgb_data:save(Map1);
-				_ ->
-					{ok, [PrevLayer | _]} = rpgb_data:search(rpgb_rec_layer, [{next_layer_id, LayerId}]),
-					PrevLayer2 = PrevLayer#rpgb_rec_layer{next_layer_id = Layer#rpgb_rec_layer.next_layer_id},
-					{ok, _PrevLayer3} = rpgb_data:save(PrevLayer2)
-			end,
+			MapLayerList = lists:delete(LayerId, Map#rpgb_rec_battlemap.layer_ids),
+			Map2 = Map#rpgb_rec_battlemap{layer_ids = MapLayerList},
+			rpgb_data:save(Map2),
 			rpgb_data:delete(Layer),
 			{true, Req, Ctx}
 	end.
 
 content_types_provided(Req, Ctx) ->
 	Types = [
-		{{<<"application">>, <<"json">>, []}, to_json}
+		{{<<"application">>, <<"json">>, '*'}, to_json}
 	],
 	{Types, Req, Ctx}.
 
 content_types_accepted(Req, Ctx) ->
 	Types = [
-		{{<<"application">>, <<"json">>, []}, from_json}
+		{{<<"application">>, <<"json">>, '*'}, from_json}
 	],
 	{Types, Req, Ctx}.
 
 to_json(Req, #ctx{layerid = maplayers} = Ctx) ->
 	#ctx{map = MapRec} = Ctx,
-	#rpgb_rec_battlemap{bottom_layer_id = FirstLayerId} = MapRec,
-	Layers = get_layers(FirstLayerId),
-	Json = [make_json(Req, Ctx, Layer) || Layer <- Layers],
+	Layers = [rpgb_data:get_by_id(rpgb_rec_layer, Id) || Id <- MapRec#rpgb_rec_battlemap.layer_ids],
+	Json = [make_json(Req, Ctx, Layer) || {ok, Layer} <- Layers],
 	{jsx:to_json(Json), Req, Ctx};
 
 to_json(Req, #ctx{layer = Layer} = Ctx) ->
@@ -144,8 +137,7 @@ to_json(Req, #ctx{layer = Layer} = Ctx) ->
 	{jsx:to_json(Json), Req, Ctx}.
 
 from_json(Req, #ctx{layerid = maplayers} = Ctx) ->
-	#ctx{session = Session, map = Map, mapid = MapId} = Ctx,
-	User = rpgb_session:get_user(Session),
+	#ctx{map = Map, mapid = MapId} = Ctx,
 	InitialLayer = #rpgb_rec_layer{
 		id = undefined, name = <<>>, battlemap_id = MapId, created = os:timestamp(),
 		updated = os:timestamp()
@@ -155,9 +147,15 @@ from_json(Req, #ctx{layerid = maplayers} = Ctx) ->
 	case validate_layer(Term, InitialLayer) of
 		{ok, {_Json, Rec}} ->
 			{ok, Rec2} = rpgb_data:save(Rec),
-			Rec3 = insert_layer(Map, Rec2),
-			Ctx2 = Ctx#ctx{layer = Rec3, layerid = Rec3#rpgb_rec_layer.id},
-			Location = make_location(Req1, Ctx2, Rec3),
+			case lists:member(Rec2#rpgb_rec_layer.id, Map#rpgb_rec_battlemap.layer_ids) of
+				true ->
+					ok;
+				false ->
+					MapLayerList = Map#rpgb_rec_battlemap.layer_ids ++ [Rec2#rpgb_rec_layer.id],
+					rpgb_data:save(Map#rpgb_rec_battlemap{layer_ids = MapLayerList})
+			end,
+			Ctx2 = Ctx#ctx{layer = Rec2, layerid = Rec2#rpgb_rec_layer.id},
+			Location = make_location(Req1, Ctx2, Rec2),
 			Req2 = cowboy_req:set_resp_header(<<"location">>, Location, Req1),
 			{OutBody, Req3, Ctx3} = to_json(Req2, Ctx2),
 			Req4 = cowboy_req:set_resp_body(OutBody, Req3),
@@ -169,21 +167,23 @@ from_json(Req, #ctx{layerid = maplayers} = Ctx) ->
 			{halt, Req3, Ctx}
 	end;
 
-from_json(Req, #ctx{mapid = MapId, map = Map, layer = InitL} = Ctx) ->
-	#ctx{session = Session} = Ctx,
-	User = rpgb_session:get_user(Session),
+from_json(Req, #ctx{map = Map, layer = InitL} = Ctx) ->
 	InitialLayer = InitL#rpgb_rec_layer{updated = os:timestamp()},
 	{ok, Body, Req1} = cowboy_req:body(Req),
 	Term = jsx:to_term(Body),
 	?debug("Submitted json:  ~p", [Term]),
 	case validate_layer(Term, InitialLayer) of
 		{ok, {_DerJson, Rec}} ->
-			remove_layer(Map, InitialLayer),
 			{ok, Rec3} = rpgb_data:save(Rec),
 			{ok, Map2} = rpgb_data:get_by_id(rpgb_rec_battlemap, Map#rpgb_rec_battlemap.id),
-			Rec4 = insert_layer(Map2, Rec3),
-			Map3 = rpgb_data:get_by_id(rpgb_rec_battlemap, Map2#rpgb_rec_battlemap.id),
-			Ctx2 = Ctx#ctx{layer = Rec4, map = Map3},
+			{ok, Map3} = case lists:member(Rec3#rpgb_rec_layer.id, Map2#rpgb_rec_battlemap.layer_ids) of
+				false ->
+					MapLayerList = Map2#rpgb_rec_battlemap.layer_ids ++ [Rec3#rpgb_rec_layer.id],
+					rpgb_data:save(Map2#rpgb_rec_battlemap{layer_ids = MapLayerList});
+				true ->
+					{ok, Map2}
+			end,
+			Ctx2 = Ctx#ctx{layer = Rec3, map = Map3},
 			{OutBody, Req2, Ctx3} = to_json(Req1, Ctx2),
 			Req3 = cowboy_req:set_resp_body(OutBody, Req2),
 			{true, Req3, Ctx3};
@@ -193,18 +193,6 @@ from_json(Req, #ctx{mapid = MapId, map = Map, layer = InitL} = Ctx) ->
 			{ok, Req3} = cowboy_req:reply(Status, Req2),
 			{halt, Req3, Ctx}
 	end.
-
-get_layers(undefined) ->
-	[];
-get_layers(Id) ->
-	get_layers(Id, []).
-
-get_layers(undefined, Acc) ->
-	lists:reverse(Acc);
-get_layers(Id, Acc) ->
-	{ok, Layer} = rpgb_data:get_by_id(rpgb_rec_layer, Id),
-	#rpgb_rec_layer{next_layer_id = NextId} = Layer,
-	get_layers(NextId, [Layer | Acc]).
 
 make_json(_Req, _Ctx, Layer) ->
 	rpgb_rec_layer:make_json(Layer).
@@ -218,37 +206,9 @@ validate_layer(Json, InitLayer) ->
 		fun check_blank_name/1,
 		fun check_name_conflict/1,
 		fun validate_json/1,
-		fun check_named_layer/1,
-		fun check_next_layer_id/1,
-		fun check_next_layer_self/1
+		fun check_named_layer/1
 	],
 	rpgb:bind({Json, InitLayer}, ValidateFuns).
-
-check_next_layer_self({Json, Layer}) ->
-	#rpgb_rec_layer{id = LayerId} = Layer,
-	case proplists:get_value(<<"next_layer_id">>, Json) of
-		LayerId when LayerId =/= undefined ->
-			{error, 422, <<"layer cannot point to itself">>};
-		_ ->
-			{ok, {Json, Layer}}
-	end.
-
-check_next_layer_id({Json, Layer}) ->
-	NextId = proplists:get_value(<<"next_layer_id">>, Json),
-	case NextId of
-		null ->
-			{ok, {Json, Layer#rpgb_rec_layer{next_layer_id = undefined}}};
-		undefined ->
-			{ok, {Json, Layer}};
-		_ ->
-			#rpgb_rec_layer{battlemap_id = MapId} = Layer,
-			case rpgb_data:search(rpgb_rec_layer, [{battlemap_id, MapId},{id, NextId}]) of
-				{ok, []} ->
-					{error, 422, <<"layer set as next does not exist">>};
-				_ ->
-					{ok, {Json, Layer#rpgb_rec_layer{next_layer_id = NextId}}}
-			end
-	end.
 
 check_named_layer({Json, Layer}) ->
 	LayerName = Layer#rpgb_rec_layer.name,
@@ -263,6 +223,8 @@ check_named_layer({Json, Layer}) ->
 check_blank_name({Json, Layer}) ->
 	case proplists:get_value(<<"name">>, Json) of
 		<<>> ->
+			{error, 422, <<"name cannot be blank.">>};
+		null ->
 			{error, 422, <<"name cannot be blank.">>};
 		_ ->
 			{ok, {Json, Layer}}
@@ -314,8 +276,6 @@ validate_json({Json, Layer}) ->
 	case Layer:from_json(Json) of
 		{ok, Layer2} ->
 			{ok, {Json, Layer2}};
-		{ok, #rpgb_rec_layer{next_layer_id = null} = Layer2, [next_layer_id]} ->
-			{ok, {Json, Layer2}};
 		{_, Else} ->
 			Body = iolist_to_binary(io_lib:format("There were errors in the submitted json: ~p", [Else])),
 			{error, 422, Body}
@@ -330,42 +290,3 @@ generate_etag(Req, #ctx{map = Map} = Ctx) ->
 	Md5 = crypto:md5(Bin2),
 	Etag = rpgb_util:bin_to_hexstr(Md5),
 	{{weak, list_to_binary(Etag)}, Req, Ctx}.
-
-remove_layer(_Map, #rpgb_rec_layer{id = undefined} = Layer) ->
-	Layer;
-remove_layer(#rpgb_rec_battlemap{bottom_layer_id = Id} = Map, #rpgb_rec_layer{id = Id} = Layer) ->
-	NextId = Layer#rpgb_rec_layer.next_layer_id,
-	Map2 = Map#rpgb_rec_battlemap{bottom_layer_id = NextId},
-	{ok, _Map3} = rpgb_data:save(Map2),
-	Layer;
-remove_layer(_Map, #rpgb_rec_layer{id = Id, next_layer_id = NextId} = Layer) ->
-	case rpgb_data:search(rpgb_rec_layer, [{next_layer_id, Id}]) of
-		{ok, []} ->
-			ok;
-		{ok, [PrevLayer | _]} ->
-			PrevLayer2 = PrevLayer#rpgb_rec_layer{next_layer_id = NextId},
-			rpgb_data:save(PrevLayer2)
-	end,
-	Layer.
-
-insert_layer(_Map, #rpgb_rec_layer{id = undefined}) ->
-	erlang:error(badarg);
-insert_layer(#rpgb_rec_battlemap{bottom_layer_id = undefined} = Map, Layer) ->
-	Map2 = Map#rpgb_rec_battlemap{bottom_layer_id = Layer#rpgb_rec_layer.id},
-	rpgb_data:save(Map2),
-	Layer;
-insert_layer(#rpgb_rec_battlemap{bottom_layer_id = NextId} = Map, #rpgb_rec_layer{next_layer_id = NextId, id = Id} = Layer) ->
-	Map2 = Map#rpgb_rec_battlemap{bottom_layer_id = Id},
-	rpgb_data:save(Map2),
-	Layer;
-insert_layer(_Map, #rpgb_rec_layer{id = Id} = Layer) ->
-	NextId = Layer#rpgb_rec_layer.next_layer_id,
-	{ok, PrevLayers} = rpgb_data:search(rpgb_rec_layer, [{next_layer_id, NextId}]),
-	case [L || #rpgb_rec_layer{id = Lid} = L <- PrevLayers, Lid =/= Id] of
-		[] ->
-			ok;
-		[PrevLayer | _] ->
-			PrevLayer2 = PrevLayer#rpgb_rec_layer{next_layer_id = Id},
-			rpgb_data:save(PrevLayer2)
-	end,
-	Layer.

@@ -147,7 +147,7 @@ to_html(Req, #ctx{map = undefined} = Ctx) ->
 
 to_html(Req, Ctx) ->
 	rpgb:refresh_templates(map_dtl),
-	{Host, Port} = Ctx#ctx.hostport,
+	%{Host, Port} = Ctx#ctx.hostport,
 	Json = rpgb_rec_battlemap:make_json(Ctx#ctx.map),
 	%Json = make_json(Req, Ctx, Ctx#ctx.map),
 	User = rpgb_session:get_user(Ctx#ctx.session),
@@ -176,7 +176,7 @@ from_json(Req, #ctx{mapid = MapId} = Ctx) ->
 				id = undefined,
 				owner_id = User#rpgb_rec_user.id,
 				participant_ids = [],
-				bottom_layer_id = undefined,
+				layer_ids = [],
 				first_combatant_id = undefined,
 				created = os:timestamp(),
 				updated = os:timestamp()
@@ -199,7 +199,7 @@ from_json(Req, #ctx{mapid = MapId} = Ctx) ->
 					OutReq = cowboy_req:set_resp_header(<<"location">>, Location, Req1),
 					LayerRec = #rpgb_rec_layer{battlemap_id = Rec2#rpgb_rec_battlemap.id, name = <<"Bottom Layer">>},
 					{ok, LayerRec2} = rpgb_data:save(LayerRec),
-					{ok, OutRec} = rpgb_data:save(Rec2#rpgb_rec_battlemap{bottom_layer_id = LayerRec2#rpgb_rec_layer.id}),
+					{ok, OutRec} = rpgb_data:save(Rec2#rpgb_rec_battlemap{layer_ids = [LayerRec2#rpgb_rec_layer.id]}),
 					{ok, OutReq, OutRec};
 				_ ->
 					{ok, Req1, Rec2}

@@ -61,7 +61,7 @@ mecked_data(Callback) ->
 			{error, _} = Out ->
 				Out;
 			Objects ->
-				Objs2 = [Value || {Key, Value} <- Objects],
+				Objs2 = [Value || {_Key, Value} <- Objects],
 				{ok, Objs2}
 		end
 	end),
@@ -205,7 +205,7 @@ wait_until(Fun) ->
 wait_until(Fun, Iters) ->
 	wait_until(Fun, Iters, 100).
 
-wait_until(Fun, 0, _Wait) ->
+wait_until(_Fun, 0, _Wait) ->
 	erlang:error(wait_expired);
 wait_until(Fun, Iter, Wait) ->
 	case Fun() of

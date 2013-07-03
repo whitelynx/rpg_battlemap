@@ -7,7 +7,7 @@
 
 -export([init/3, rest_init/2, allowed_methods/2, is_authorized/2,
 	forbidden/2, content_types_provided/2, to_json/2, to_html/2,
-	content_types_accepted/2, from_json/2, delete_resource/2]).
+	content_types_accepted/2, from_json/2, delete_resource/2, generate_etag/2]).
 
 -record(ctx, { hostport, session, character_id, character}).
 
@@ -17,12 +17,12 @@ get_routes() ->
 		<<"/characters/:characterid">>
 	].
 
-init(_Protos, Req, _HostPort) ->
+init(_Protos, _Req, _HostPort) ->
 	{upgrade, protocol, cowboy_rest}.
 
 rest_init(Req, [HostPort]) ->
 	{ok, Session, Req1} = rpgb_session:get_or_create(Req),
-	{Path, Req2} = cowboy_req:path(Req1),
+	{_Path, Req2} = cowboy_req:path(Req1),
 	{CharId, Req3} = cowboy_req:binding(characterid, Req2),
 	CharId1 = case CharId of
 		undefined ->
@@ -48,7 +48,7 @@ is_authorized(Req, #ctx{session = Session} = Ctx) ->
 	case rpgb_session:get_user(Session) of
 		undefined ->
 			{{false, <<"persona">>}, Req, Ctx};
-		User ->
+		_User ->
 			{true, Req, Ctx}
 	end.
 
@@ -135,7 +135,7 @@ from_json(Req, #ctx{character_id = CharacterId} = Ctx) ->
 	case validate_character(Term, InitialCharacter) of
 		{ok, {_DerJson, Rec}} ->
 			{ok, Rec2} = rpgb_data:save(Rec),
-			{Host, Port} = Ctx#ctx.hostport,
+			%{Host, Port} = Ctx#ctx.hostport,
 			Location = make_location(Req, Ctx, Rec2),
 			Req2 = case CharacterId of
 				undefined ->

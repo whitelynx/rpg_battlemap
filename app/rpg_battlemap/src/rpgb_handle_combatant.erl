@@ -19,12 +19,12 @@ get_routes() ->
 		<<"/maps/:mapid/layers/:layerid/combatants">>
 	].
 
-init(_Protos, Req, _HostPort) ->
+init(_Protos, _Req, _HostPort) ->
 	{upgrade, protocol, cowboy_rest}.
 
 rest_init(Req, [HostPort]) ->
 	{ok, Session, Req1} = rpgb_session:get_or_create(Req),
-	{Path, Req2} = cowboy_req:path(Req1),
+	{_Path, Req2} = cowboy_req:path(Req1),
 	{MapId, Req3} = cowboy_req:binding(mapid, Req2),
 	MapId1 = case MapId of
 		undefined ->
@@ -70,7 +70,7 @@ is_authorized(Req, #ctx{session = Session} = Ctx) ->
 	case rpgb_session:get_user(Session) of
 		undefined ->
 			{{false, <<"post">>}, Req, Ctx};
-		User ->
+		_User ->
 			{true, Req, Ctx}
 	end.
 
@@ -177,7 +177,7 @@ from_json(Req, #ctx{combatantid = mapcombatants} = Ctx) ->
 					Req4 = cowboy_req:set_resp_body(OutBody, Req3),
 					{true, Req4, Ctx3};
 				N when is_integer(N), 1 =< N, N =< 20 ->
-					{Map1, Combatants} = make_combatants(N, Rec, Map),
+					{_Map1, Combatants} = make_combatants(N, Rec, Map),
 					Jsons = [make_json(Req, Ctx, C) || C <- Combatants],
 					Req2 = cowboy_req:set_resp_body(jsx:to_json(Jsons), Req1),
 					{true, Req2, Ctx};
@@ -195,13 +195,13 @@ from_json(Req, #ctx{combatantid = mapcombatants} = Ctx) ->
 	end;
 
 from_json(Req, Ctx) ->
-	#ctx{session = Session, map = Map, mapid = MapId} = Ctx,
-	User = rpgb_session:get_user(Session),
+	#ctx{map = Map} = Ctx,
+	%User = rpgb_session:get_user(Session),
 	BaseCombatant = Ctx#ctx.combatant#rpgb_rec_combatant{updated = os:timestamp()},
 	{ok, Body, Req1} = cowboy_req:body(Req),
 	Term = jsx:to_term(Body),
 	case validate_combatant(Term, BaseCombatant) of
-		{ok, {Json, Rec}} ->
+		{ok, {_Json, Rec}} ->
 			remove_combatant(Map, BaseCombatant),
 			{ok, Rec3} = rpgb_data:save(Rec),
 			{ok, Map2} = rpgb_data:get_by_id(rpgb_rec_battlemap, Map#rpgb_rec_battlemap.id),
@@ -209,7 +209,7 @@ from_json(Req, Ctx) ->
 			Ctx2 = Ctx#ctx{combatant = Rec4, map = Map3},
 			{OutBody, Req2, Ctx3} = to_json(Req1, Ctx2),
 			Req3 = cowboy_req:set_resp_body(OutBody, Req2),
-			{true, Req3, Ctx2};
+			{true, Req3, Ctx3};
 		{error, Status, ErrBody} ->
 			ErrBody2 = jsx:to_json(ErrBody),
 			Req2 = cowboy_req:set_resp_body(ErrBody2, Req1),
@@ -295,7 +295,7 @@ scrub_disallowed(Json, [Key | Tail] = Nopes) ->
 
 check_valid_layer({_Json, #rpgb_rec_combatant{layer_id = undefined}} = In) ->
 	{ok, In};
-check_valid_layer({Json, Rec} = In) ->
+check_valid_layer({_Json, Rec} = In) ->
 	#rpgb_rec_combatant{layer_id = LayerId, battlemap_id = MapId} = Rec,
 	case rpgb_data:search(rpgb_rec_layer, [{id, LayerId}, {battlemap_id, MapId}]) of
 		{ok, []} ->
@@ -328,7 +328,7 @@ validate_json({Json, Rec}) ->
 			case validate_warnings(Rec2, Warnings) of
 				{ok, Rec3} ->
 					{ok, {Json, Rec3}};
-				{error, Rec3, Warnings2} ->
+				{error, _Rec3, Warnings2} ->
 					Body = iolist_to_binary(io_lib:format("There were errors in the submitted json: ~p", [Warnings2])),
 					{error, 422, Body}
 			end;
@@ -454,6 +454,6 @@ insert_combatant(Map, Combatant) ->
 		[] ->
 			ok;
 		[Prev | _] ->
-			{ok, Prev2} = rpgb_data:save(Prev#rpgb_rec_combatant{next_combatant_id = Combatant#rpgb_rec_combatant.id})
+			{ok, _Prev2} = rpgb_data:save(Prev#rpgb_rec_combatant{next_combatant_id = Combatant#rpgb_rec_combatant.id})
 	end,
 	{Map, Combatant}.

@@ -21,7 +21,7 @@ get_routes() ->
 		<<"/account/logout">>
 	].
 
-init(_Protos, Req, _HostPort) ->
+init(_Protos, _Req, _HostPort) ->
 	{upgrade, protocol, cowboy_rest}.
 
 rest_init(Req, [HostPort]) ->
@@ -36,14 +36,14 @@ rest_init(Req, [HostPort]) ->
 		_ ->
 			undefined
 	end,
-	{ok, Req1, #ctx{hostport = HostPort, session = Session, action = Action}}.
+	{ok, Req2, #ctx{hostport = HostPort, session = Session, action = Action}}.
 
 allowed_methods(Req, Ctx) ->
 	{[<<"GET">>, <<"POST">>, <<"HEAD">>], Req, Ctx}.
 
 is_authorized(Req, #ctx{action = Action} = Ctx) when Action =:= login; Action =:= logout ->
 	{true, Req, Ctx};
-is_authorized(Req, #ctx{action = undefined, session = Session} = Ctx) ->
+is_authorized(Req, #ctx{action = undefined} = Ctx) ->
 	case cowboy_req:method(Req) of
 		{<<"POST">>, Req1} ->
 			?debug("authorized"),
@@ -68,22 +68,22 @@ content_types_accepted(Req, Ctx) ->
 	],
 	{Types, Req, Ctx}.
 
-resource_exists(Req, #ctx{action = undefined} = Ctx) ->
-	{true, Req, Ctx};
-resource_exists(Req, Ctx) ->
-	{false, Req, Ctx}.
+%resource_exists(Req, #ctx{action = undefined} = Ctx) ->
+%	{true, Req, Ctx};
+%resource_exists(Req, Ctx) ->
+%	{false, Req, Ctx}.
 
-previously_existed(Req, Ctx) ->
-	{true, Req, Ctx}.
+%previously_existed(Req, Ctx) ->
+%	{true, Req, Ctx}.
 
-from_json(Req, #ctx{session = Session, hostport = {Host, Port}, action = logout} = Ctx) ->
+from_json(Req, #ctx{action = logout} = Ctx) ->
 	?info("processing logout"),
 	Req1 = rpgb_session:destroy(Req),
 	{true, Req1, Ctx};
 
-from_json(Req, #ctx{session = Session, hostport = {Host, Port}, action = login} = Ctx) ->
+from_json(Req, #ctx{session = Session, action = login} = Ctx) ->
 	?info("processing login"),
-	SessionId = rpgb_session:get_id(Session),
+	%SessionId = rpgb_session:get_id(Session),
 	BaseURL = rpgb:get_url(Req, []),
 	{ok, Post, Req1} = cowboy_req:body(Req),
 	Json = jsx:to_term(Post),

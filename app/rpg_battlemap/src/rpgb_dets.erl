@@ -1,5 +1,6 @@
 -module(rpgb_dets).
--behavior(gen_server).
+% TODO actually create the behavior
+%-behavior(gen_server).
 -behavior(rpgb_gen_data).
 
 -include("log.hrl").

@@ -7,7 +7,7 @@
 	g_zonejson/0]).
 % more nuts 'n' bolts
 -export([g_name/0, g_color/0, g_opacity/0, g_color_rgb/0,
-	g_color_rgba/0, g_256/0, uniquify/1, g_url/0]).
+	g_color_rgba/0, g_256/0, uniquify/1, g_url/0, g_maybe_name/0]).
 
 %% higher level
 
@@ -180,6 +180,9 @@ g_name() ->
 			{error, Out, _} -> Out;
 			Out -> Out
 		end).
+
+g_maybe_name() ->
+	oneof([undefined, null, <<>>, g_name()]).
 
 g_url() ->
 	?LET({Proto, Domain, Path},

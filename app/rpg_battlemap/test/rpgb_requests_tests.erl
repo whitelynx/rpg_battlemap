@@ -11,7 +11,8 @@ request_test_() -> {setup, fun() ->
 	fun(_) -> [
 
 		{"statem", timeout, 60000, fun() ->
-			?assertEqual(true, proper:quickcheck(?MODULE:prop_statem(), [{to_file, user}]))
+			%?assertEqual(true, proper:quickcheck(?MODULE:prop_statem(), [{to_file, user}]))
+			?assertEqual(true, qc([{to_file, user}]))
 		end}
 
 	] end}.
@@ -35,9 +36,9 @@ prop_statem() ->
 			Res == ok))
 	end).
 
-up() ->
-	{setup, Up, _Down, _Tests} = request_test_(),
-	Up().
+qc() -> qc([]).
+
+qc(Opts) -> proper:quickcheck(?MODULE:prop_statem(), Opts).
 
 extended_commands(Cmds) ->
 	[extended_command(Cmd) || Cmd <- Cmds].
@@ -59,21 +60,6 @@ id(#test_character{id = I}) -> I;
 id(#test_combatant{id = I}) -> I;
 id(#test_zone{id = I}) -> I;
 id(#test_layer{id = I}) -> I.
-
-%command_category(Cmds) ->
-%	Fun = fun
-%		({set, _, {call, _Mod, connect_ws, [Who | _]}}) ->
-%			{connect_ws, Who};
-%		({set, _, {call, _Mod, disconnect_ws, _}}) ->
-%			disconnect_ws;
-%		({set, _, {call, _Mod, Resource, [Transport, Who, Action]}) ->
-%			Trans = case Transport of
-%				http -> http;
-%				_ -> websocket
-%			end,
-%			{Resource, Trans, Who, Action}
-%	end,
-%	lists:map(Fun, Cmds).
 
 %% ===================================================================
 %% generators
@@ -115,22 +101,8 @@ command(State) ->
 		[{call, ?MODULE, connect_ws, [g_who(), elements(State#state.maps)]} || length(State#state.ws) =< 10, length(State#state.maps) > 0]
 		++ [{call, ?MODULE, disconnect_ws, [elements(State#state.ws)]} || State#state.ws =/= []]
 		++ rpgb_maps_tests:command(State)
+		++ rpgb_layers_tests:command(State)
 		).
-
-%command(#state{maps = []}) ->
-%	{call, rpgb_maps_tests, http, [g_who(), post, undefined, rpgb_prop:g_mapjson()]};
-%command(State) ->
-%	oneof([
-%		%{call, ?MODULE, characters, [g_transport(State), g_who(), g_action(), g_maybe_exists(State#state.characters), rpgb_prop:g_characterjson()]},
-%		%{call, ?MODULE, combatants, [g_transport(State), g_who(), g_action(), g_maybe_exists(State#state.combatants), rpgb_prop:g_combatantjson(), g_maybe_exists(State#state.maps)]},
-%		{call, rpgb_maps_tests, http, [g_who(), g_action(), g_maybe_exists(State#state.maps), rpgb_prop:g_mapjson()]},
-%		{call, rpgb_maps_tests, websocket, [g_maybe_exists(State#state.ws), g_action(), rpgb_prop:g_mapjson()]}]
-%		%{call, ?MODULE, layers, [g_transport(State), g_who(), g_action(), g_maybe_exists(State#state.layers), rpgb_prop:g_layerjson(), g_maybe_exists(State#state.maps)]},
-%		%{call, ?MODULE, zones, [g_transport(State), g_who(), g_action(), g_maybe_exists(State#state.zones), rpgb_prop:g_zonejson(), g_maybe_exists(State#state.layers)]},
-%		%{call, ?MODULE, auras, [g_transport(State), g_who(), g_action(), g_maybe_exists(State#state.zones), rpgb_prop:g_zonejson(), g_maybe_exists(State#state.layers)]},
-%		++ [{call, ?MODULE, connect_ws, [g_who(), elements(State#state.maps)]} || length(State#state.ws) =< 10]
-%		++ [{call, ?MODULE, disconnect_ws, [elements(State#state.ws)]} || State#state.ws =/= []]
-%	).
 
 g_action() ->
 	oneof([get, put, post, delete]).
@@ -154,6 +126,19 @@ g_transport(#state{ws = []}) ->
 g_transport(State) ->
 	oneof([http | State#state.ws]).
 
+maybe_set_name([{}], undefined) ->
+	[{}];
+
+maybe_set_name([{}], Name) ->
+	[{<<"name">>, Name}];
+
+maybe_set_name(Json,undefined) ->
+	lists:keydelete(<<"name">>, 1, Json);
+
+maybe_set_name(Json, Name) ->
+	[{name, Name} | lists:keydelete(<<"name">>, 1, Json)].
+
+
 %% ===================================================================
 %% preconditions
 %% ===================================================================
@@ -167,57 +152,25 @@ precondition(_State, {call, ?MODULE, _Call, _Args}) ->
 	true;
 precondition(State, {call, Mod, Call, Args}) ->
 	Mod:precondition(State, {call, Mod, Call, Args}).
-%precondition(_State, {call, _Mod, _Action, [websocket, nopartier | _Args]}) ->
-%	false;
-%precondition(State, {call, _Mod, _Action, [websocket, Who | _Args]}) ->
-%	lists:keymember(Who, 1, State#state.ws);
-%precondition(_State, {call, _mod, maps, [http, notpartier, put, undefined | _]}) ->
-%	false;
-%precondition(_State, {call, _Mod, combatants, [http, _Who, _Action, undefined, _Json, undefined | _]}) ->
-%	false;
-%precondition(_State, {call, _Mod, layers, [http, _Who, _Action, undefined, _HJson, undefined]}) ->
-%	false;
-%precondition(_State, {call, _Mod, ZoneOrAura, [_Transport, _Who, _Action, undefined, _Json, undefined]}) when ZoneOrAura =:= zones; ZoneOrAura =:= auras ->
-%	false;
-%precondition(_State, _Call) ->
-%	true.
 
 %% ===================================================================
 %% next_state
 %% ===================================================================
 
-next_state(State, _Result, {call, _Mod, _Resource, [_Transport, notpartier | _]}) ->
+next_state(State, _Result, {call, ?MODULE, _Resource, [_Transport, notpartier | _]}) ->
 	State;
 
-%next_state(State, Result, {call, _Mod, characters, Args}) ->
-%	characters_next_state(State, Result, Args);
-%
-%next_state(State, Result, {call, _Mod, maps, Args}) ->
-%	maps_next_state(State, Result, Args);
-%
-%next_state(State, Result, {call, _Mod, combatants, Args}) ->
-%	combatants_next_state(State, Result, Args);
-%
-%next_state(State, Result, {call, _Mod, layers, Args}) ->
-%	layers_next_state(State, Result, Args);
-%
-%next_state(State, Result, {call, _Mod, zones, Args}) ->
-%	zones_next_state(State, Result, Args);
-%
-%next_state(State, Result, {call, _Mod, auras, Args}) ->
-%	auras_next_state(State, Result, Args);
-
-next_state(State, _Result, {call, _Mod, connect_ws, [notauthed, _Map]}) ->
+next_state(State, _Result, {call, ?MODULE, connect_ws, [notauthed, _Map]}) ->
 	State;
 
-next_state(State, _Result, {call, _Mod, connect_ws, [notpartier, _Map]}) ->
+next_state(State, _Result, {call, ?MODULE, connect_ws, [notpartier, _Map]}) ->
 	State;
 
-next_state(State, Result, {call, _Mod, connect_ws, [Who, Map]}) ->
+next_state(State, Result, {call, ?MODULE, connect_ws, [Who, Map]}) ->
 	Sockets = lists:keystore(Result, 1, State#state.ws, {Result, Who, Map#test_map.id}),
 	State#state{ws = Sockets};
 
-next_state(State, _Result, {call, _Mod, disconnect_ws, [{Socket, _Who, _MapId}]}) ->
+next_state(State, _Result, {call, ?MODULE, disconnect_ws, [{Socket, _Who, _MapId}]}) ->
 	Sockets = lists:keydelete(Socket, 1, State#state.ws),
 	State#state{ws = Sockets};
 
@@ -466,11 +419,11 @@ extract_zoneaura(Original, Result) ->
 %% === common ========================================================
 
 extract_json({ok, _Status, _Heads, Body} = Thing) ->
-	?debugFmt("http extract json: ~p", [Thing]),
+	%?debugFmt("http extract json: ~p", [Thing]),
 	jsx:to_term(list_to_binary(Body));
 
 extract_json({_SomeId, {ok, {text, Frame}}}) ->
-	?debugFmt("websocket extract json: ~p", [Frame]),
+	%?debugFmt("websocket extract json: ~p", [Frame]),
 	Json = jsx:to_term(Frame),
 	proplists:get_value(<<"data">>, Json).
 
@@ -502,13 +455,6 @@ fix_json_keys(Json) ->
 %% ===================================================================
 %% postconditions
 %% ===================================================================
-
-%% === maps ==========================================================
-
-
-
-%maps_ws_post(_State, _Result, _Socket, _Who, _Action, _Map, _Json) ->
-%	false.
 
 %% === characters ==================================================
 
@@ -721,133 +667,6 @@ postcondition(_State, {call, _Mod, disconnect_ws, _Args}, ok) ->
 postcondition(State, {call, Mod, _Func, _Args} = Call, Result) ->
 	Mod:postcondition(State, Call, Result);
 
-%postcondition(State, {call, _Mod, Cmd, [Mode | Args]}, Result) ->
-%	CmdStr = atom_to_list(Cmd),
-%	{FunStr, ArgsList} = case Mode of
-%		http ->
-%			{CmdStr ++ "_http_post", [State, Result | Args]};
-%		_ ->
-%			{CmdStr ++ "_ws_post", [State, Result, Mode | Args]}
-%	end,
-%	Fun = list_to_atom(FunStr),
-%	erlang:apply(?MODULE, Fun, ArgsList);
-
-%postcondition(_State, {call, _Mod, Resource, [http | _] = Args}, {ok, "404", _Heads, _Body}) ->
-%	should_404(Resource, Args);
-%
-%postcondition(_State, {call, _Mod, Resource, [http | _] = Args}, {ok, "405", _Heads, _Body}) ->
-%	should_405(Resource, Args);
-%
-%postcondition(_State, {call, _Mod, _Resource, [http, notpartier | _] = _Args}, {ok, "200", _Heads, _Body}) ->
-%	false;
-%
-%postcondition(_State, {call, _Mod, _Resource, [http, notauthed | _]}, {ok, "401", Heads, _Body}) ->
-%	case proplists:get_value("www-authenticate", Heads) of
-%		"persona" ->
-%			true;
-%		Other ->
-%			?debugFmt("www-authenticate header was ~s; not persona", [Other]),
-%			false
-%	end;
-%
-%postcondition(_State, {call, _Mod, _Resource, [http, notpartier | _]}, {ok, "401", Heads, _Body}) ->
-%	case proplists:get_value("www-authenticate", Heads) of
-%		"persona" ->
-%			true;
-%		Other ->
-%			?debugFmt("www-authenticate header was ~s; not persona", [Other]),
-%			false
-%	end;
-%
-%postcondition(State, {call, _Mod, Resource, [http, _Who, get | _] = Args}, {ok, "200", _Heads, Body}) ->
-%	DecodedBody = jsx:to_term(list_to_binary(Body)),
-%	ExpectedBody = expected_body(State, Resource, Args),
-%	assert_json(ExpectedBody, DecodedBody);
-%
-%postcondition(_State, {call, _Mod, maps, [http, _Who, put, undefined, PutBody]}, {ok, "201", Headers, Body}) ->
-%	HasLocation = proplists:get_value("location", Headers) =/= undefined,
-%	ExpectedBody = jsx:to_term(jsx:to_json(PutBody)),
-%	DecodedBody = jsx:to_term(list_to_binary(Body)),
-%	assert_json(ExpectedBody, DecodedBody) andalso HasLocation;
-%
-%postcondition(State, {call, _Mod, maps, [http, _Who, put, Map, PutBody] = Args}, {ok, "200", Headers, Body}) ->
-%	DecodedBody = jsx:to_term(list_to_binary(Body)),
-%	ExpectedBody = expected_body(State, Map, Args),
-%	assert_json(ExpectedBody, DecodedBody);
-%
-%postcondition(_State, {call, _Mod, characters, [http, _Who, put, undefined, PutBody]}, {ok, "201", Headers, Body}) ->
-%	HasLocation = proplists:get_value("location", Headers) =/= undefined,
-%	ExpectedBody = jsx:to_term(jsx:to_json(PutBody)),
-%	DecodedBody = jsx:to_term(list_to_binary(Body)),
-%	assert_json(ExpectedBody, DecodedBody) andalso HasLocation;
-%
-%postcondition(_State, {call, _Mod, Resource, [http, _Who, put, undefined, PutBody, Map]}, {ok, "201", Headers, Body}) ->
-%	HasLocation = proplists:get_value("location", Headers) =/= undefined,
-%	ExpectedBody = jsx:to_term(jsx:to_json(PutBody)),
-%	DecodedBody = jsx:to_term(list_to_binary(Body)),
-%	assert_json(ExpectedBody, DecodedBody) andalso HasLocation;
-%
-%postcondition(_State, {call, _Mod, Resource, [http, _Who, put, undefined | _] = Args}, {ok, "422", _Head, _Body}) ->
-%	PutBody = extract_req_body(Resource, Args),
-%	case proplists:get_value(name, PutBody) of
-%		undefined ->
-%			true;
-%		<<>> ->
-%			true;
-%		_ ->
-%			?debugFmt("should not have gotten a 422 on put~n"
-%				"    Resouce: ~p~n"
-%				"    Args: ~p~n", [Resource, Args]),
-%			false
-%	end;
-%
-%postcondition(_State, {call, _Mod, maps, [http, Who, delete, #test_map{owner = Who} | _]}, {ok, "204", _Head, _Body}) ->
-%	true;
-%
-%postcondition(_State, {call, _Mod, maps, [http, _Who, delete, #test_map{owner = _NotWhoe} | _]}, {ok, "403", _Head, _Body}) ->
-%	true;
-%
-%postcondition(_State, {call, _Mod, _Resource, [http, _Who, delete, Exists | _]}, {ok, "204", _Heads, _Body}) when Exists =/= undefined ->
-%	true;
-%
-%postcondition(_State, {call, _Mod, connect_ws, [notpartier | _]}, {error, {403, _}}) ->
-%	true;
-%
-%postcondition(_State, {call, _Mod, connect_ws, [notauthed | _]}, {error, {401, _}}) ->
-%	true;
-%
-%postcondition(_State, {call, _Mod, connect_ws, [Who, Map]}, {error, Wut}) ->
-%	?debugFmt("Error connectiong to websocket.~n"
-%		"    Who: ~p~n"
-%		"    MapId: ~p~n"
-%		"    Error: ~p", [Who, Map#test_map.id, Wut]),
-%	false;
-%
-%postcondition(_State, {call, _Mod, connect_ws, _Args}, _Result) ->
-%	true;
-%
-%postcondition(_State, {call, _Mod, disconnect_ws, _Args}, ok) ->
-%	true;
-%
-%postcondition(State, {call, _Mod, Cmd, [Ws, Who, Action, Exists, Json | ArgsRest]}, Result) ->
-%	{TestedSocket, _, _} = Ws,
-%	case gen_websocket:recv(TestedSocket, 5000) of
-%		{ok, {text, Frame}} ->
-%			DecodedFrame = jsx:to_term(Frame),
-%			case proplists:get_value(<<"reply_to">>, DecodedFrame) of
-%				Result ->
-%					Accepted = proplists:get_value(<<"accepted">>, DecodedFrame),
-%					Data = proplists:get_value(<<"data">>, DecodedFrame),
-%					ws_postcondition(State, Cmd, Who, Action, Exists, Json, ArgsRest, Accepted, Data);
-%				NotResult ->
-%					?debugFmt("incorrect reply indicator: ~p", [NotResult]),
-%					false
-%			end;
-%		Else ->
-%			?debugFmt("Did not get an initial frame: ~p", [Else]),
-%			false
-%	end;
-
 postcondition(State, Call, Result) ->
 	?debugFmt("Postcondition fall through:~n"
 		"State: ~p~n"
@@ -890,12 +709,6 @@ build_expected_ws_frame(Action, Accepted, Type, TypeId) ->
 			[{<<"type_id">>, Id} | Acc]
 	end,
 	lists:foldl(Fun, [], [{action, Action}, {accepted, Accepted}, {type, Type}, {typeid, TypeId}]).
-
-
-%assert_evelope({text, FrameTxt}, ReplyTo, Accepted, Type, Data) ->
-%	Frame = jsx:to_term(FrameTxt),
-%	Expected = [{<<"reply_to">>, ReplyTo},{<<"type">>, Type},{<<"accepted">>, Accepted}, {<<"data">>, Data}]j,
-%	assert_json(Expected, Frame).
 
 extract_req_body(characters, [_, _, _, _, Json]) ->
 	Json;
@@ -1020,9 +833,9 @@ connect_ws(Who, Map) ->
 		{ok, Socket} ->
 			Socket;
 		Else ->
-			?debugFmt("Could not connect socket: ~p~n"
-				"    Url: ~p~n"
-				"    Cookie: ~p", [Else, Url, Cookie]),
+%			?debugFmt("Could not connect socket: ~p~n"
+%				"    Url: ~p~n"
+%				"    Cookie: ~p", [Else, Url, Cookie]),
 			Else
 	end.
 
@@ -1091,7 +904,10 @@ url_from_rec(ZoneOrAura, undefined, Args) when ZoneOrAura =:= zones; ZoneOrAura 
 	iolist_to_binary(io_lib:format("~s/~s", [LayerUrl, ZoneOrAura]));
 
 url_from_rec(Type, undefined, Args) ->
-	#test_map{url = Murl} = proplists:get_value(map, Args),
+	Murl = case proplists:get_value(map, Args) of
+		#test_map{url = O} -> O;
+		O when is_binary(O) -> O
+	end,
 	iolist_to_binary(io_lib:format("~s/~s", [Murl, Type]));
 
 url_from_rec(maps, Rec, _Args) ->

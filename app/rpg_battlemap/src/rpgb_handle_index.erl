@@ -12,7 +12,7 @@ init(Transport, Req, Ctx) ->
 	?info("init on transport ~p", [Transport]),
 	{ok, Req, Ctx}.
 
-handle(Req, [{Host, Port}] = Ctx) ->
+handle(Req, Ctx) ->
 	?info("handle"),
 	{ok, Session, Req1} = rpgb_session:get_or_create(Req),
 	User = rpgb_session:get_user(Session),
@@ -55,7 +55,7 @@ add_map_urls([], _Req, Acc) ->
 	lists:reverse(Acc);
 
 add_map_urls([Map | Tail], Req, Acc) ->
-	Props = Map:to_json([fun(Json, Rec) ->
+	Props = Map:to_json([fun(Json, _Rec) ->
 		Url = rpgb:get_url(Req, ["map", integer_to_list(Map#rpgb_rec_battlemap.id)]),
 		[{url, Url} | Json]
 	end ]),
@@ -68,7 +68,7 @@ add_character_urls([], _Req, Acc) ->
 	lists:reverse(Acc);
 
 add_character_urls([Character | Tail], Req, Acc) ->
-	Props = Character:to_json([fun(Json, Rec) ->
+	Props = Character:to_json([fun(Json, _Rec) ->
 		Url = rpgb:get_url(Req, ["character", integer_to_list(Character#rpgb_rec_character.id)]),
 		[{url, Url} | Json]
 	end ]),

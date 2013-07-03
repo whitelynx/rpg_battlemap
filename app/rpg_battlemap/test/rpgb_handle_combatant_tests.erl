@@ -65,16 +65,15 @@ initial_state() ->
 	[rpgb_data:save(#rpgb_rec_layer{
 		name = list_to_binary("layer " ++ integer_to_list(N)),
 		id = N + 3000,
-		battlemap_id = 9000,
-		next_layer_id = if N > 2 -> 3000 + N; true -> undefined end
+		battlemap_id = 9000
 	}) || N <- lists:seq(1,3)],
 	Map = #rpgb_rec_battlemap{
 		id = 9000,
 		owner_id = User#rpgb_rec_user.id,
 		participant_ids = [Partier#rpgb_rec_user.id],
-		bottom_layer_id = 3001
+		layer_ids = [3001, 3002, 3003]
 	},
-	{ok, Map2} = rpgb_data:save(Map),
+	{ok, _Map2} = rpgb_data:save(Map),
 	[].
 
 
@@ -147,7 +146,7 @@ precondition(S, {call, _, Call, _}) when Call == delete; Call == delete_bad_user
 	length(S) > 0;
 precondition(S, {call, _, update, [_, Nth, Next, _, _, _]}) when Nth =/= Next, length(S) > 0 ->
 	true;
-precondition(S, {call, _, update, _}) ->
+precondition(_S, {call, _, update, _}) ->
 	false;
 precondition(S, {call, _, update_bad_user, _}) when length(S) == 0 ->
 	false;
@@ -164,10 +163,10 @@ precondition(_, _) ->
 %% next_state
 %% =======================================================
 
-next_state(State, Res, {call, _, create, [Put, Next, _Creator, _State]}) ->
+next_state(State, Res, {call, _, create, [_Put, Next, _Creator, _State]}) ->
 	insert_at({call, ?MODULE, decode_res, [Res]}, Next, State);
 
-next_state(State, Res, {call, _, create_batch, [Put, Next, _Creator, Count, _S]}) ->
+next_state(State, Res, {call, _, create_batch, [_Put, Next, _Creator, Count, _S]}) ->
 	Calls = [{call, ?MODULE, decode_res_at, [Res, Nth]} || Nth <- lists:seq(1, Count)],
 	case Next of
 		Atom when is_atom(Atom) ->
@@ -196,7 +195,7 @@ next_state(State, Res, {call, _, update, [_Put, Nth, Next, _Layer, _Creator, _S]
 next_state(State, Res, {call, _, get_a_combatant, [_Who, Nth, _State]}) ->
 	rpgb:splice(State, Nth, 1, [{call, ?MODULE, decode_res, [Res]}]);
 
-next_state(State, Res, {call, _, delete, [Nth, _State]}) ->
+next_state(State, _Res, {call, _, delete, [Nth, _State]}) ->
 	rpgb:snip(Nth, State);
 
 next_state(State, _Result, _Call) ->
@@ -409,9 +408,7 @@ delete_bad_user(Nth, Deleter, State) ->
 			get_session_cookie(baduser);
 		{not_owner, OwnerId} ->
 			{ok, UserSession} = rpgb_session:get(<<"sessionid">>),
-			{ok, PartierSession} = rpgb_session:get(<<"participant">>),
 			User = rpgb_session:get_user(UserSession),
-			Partier = rpgb_session:get_user(PartierSession),
 			case User#rpgb_rec_user.id of
 				OwnerId ->
 					get_session_cookie(partier);
@@ -427,12 +424,12 @@ delete_bad_user(Nth, Deleter, State) ->
 %% postcondition
 %% =======================================================
 
-postcondition(State, {call, _, create, [Put, Next, Creator, _State]}, {ok, "201", _, Body}) ->
+postcondition(_State, {call, _, create, [Put, _Next, _Creator, _State]}, {ok, "201", _, Body}) ->
 	%Json = jsx:to_term(list_to_binary(Body)),
 	?assert(rpgb_test_util:assert_body(Put, Body)),
 	true;
 
-postcondition(State, {call, _, create_batch, [Put, Next, Creator, Batch, _State]}, {ok, "200", _, Body}) ->
+postcondition(_State, {call, _, create_batch, [Put, _Next, _Creator, Batch, _State]}, {ok, "200", _, Body}) ->
 	BaseName = proplists:get_value(<<"name">>, Put),
 	Names = [begin Lint = list_to_binary(integer_to_list(N)), <<BaseName/binary, " ", Lint/binary>> end
 	|| N <- lists:seq(1, Batch)],
@@ -440,7 +437,7 @@ postcondition(State, {call, _, create_batch, [Put, Next, Creator, Batch, _State]
 	Got = jsx:to_term(list_to_binary(Body)),
 	assert_batch(Puts, Got);
 
-postcondition(State, {call, _, create_bad_batch, _}, {ok, "422", _, _}) ->
+postcondition(_State, {call, _, create_bad_batch, _}, {ok, "422", _, _}) ->
 	true;
 
 postcondition(_State, {call, _, create_bad_user, _}, {ok, "403", _, _}) ->
@@ -502,10 +499,10 @@ postcondition(State, {call, _, update, [Put, Nth, Next, Layer, _Who, _S]}, {ok, 
 	?assert(rpgb_test_util:assert_body(Combatant3, Body)),
 	true;
 
-postcondition(State, {call, _, update_bad_user, _}, {ok, "403", _, _}) ->
+postcondition(_State, {call, _, update_bad_user, _}, {ok, "403", _, _}) ->
 	true;
 
-postcondition(State, {call, _, update_blank_name, _}, {ok, "422", _, _}) ->
+postcondition(_State, {call, _, update_blank_name, _}, {ok, "422", _, _}) ->
 	true;
 
 postcondition(_State, {call, _, update_bad_reorder, _}, {ok, "422", _, _}) ->
@@ -514,7 +511,7 @@ postcondition(_State, {call, _, update_bad_reorder, _}, {ok, "422", _, _}) ->
 postcondition(_State, {call, _, update_bad_layer, _}, {ok, "422", _, _}) ->
 	true;
 
-postcondition(State, {call, _, delete,[Nth, _State]}, {ok, "204", _, _}) ->
+postcondition(_State, {call, _, delete,[_Nth, _State]}, {ok, "204", _, _}) ->
 	true;
 
 postcondition(_State, {call, _, delete_bad_user, _}, {ok, "403", _, _}) ->
@@ -532,7 +529,7 @@ get_session_cookie(partier) -> ?participant;
 get_session_cookie(owner) -> ?cookie;
 get_session_cookie(_) -> ?badcookie.
 
-get_next_id(Nth, List) when length(List) =< 1 ->
+get_next_id(_Nth, List) when length(List) =< 1 ->
 	null;
 get_next_id(Nth, List) when Nth == length(List) ->
 	null;

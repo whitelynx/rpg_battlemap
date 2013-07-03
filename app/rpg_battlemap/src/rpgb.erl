@@ -70,7 +70,7 @@ get_url(Host, Port) ->
 
 get_url(Host, Port, Path) ->
 	{ok, Proto} = get_env(protocol, https),
-	get_url(https, Host, Port, Path).
+	get_url(Proto, Host, Port, Path).
 
 get_url(Proto, Host, Port, Path) when is_list(Path), is_list(hd(Path)) ->
 	Path1 = filename:join(Path),
@@ -80,7 +80,7 @@ get_url(Proto, Host, Port, [$/ | Path]) ->
 get_url(Proto, Host, Port, <<$/, Path/binary>>) ->
 	get_url(Proto, Host, Port, Path);
 get_url(Req, Host, Port, Path) when is_tuple(Req) ->
-	HostUrl = cowboy_req:host_url(Req),
+	%HostUrl = cowboy_req:host_url(Req),
 	Proto = get_protocol(Req),
 	get_url(Proto, Host, Port, Path);
 get_url("http", Host, 80, Path) ->

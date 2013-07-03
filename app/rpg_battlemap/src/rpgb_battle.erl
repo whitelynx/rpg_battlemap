@@ -65,6 +65,10 @@ handle_event({delete, rpgb_rec_battlemap, MapId} = Msg, #state{map_id = MapId} =
 	tell_consumers(State#state.consumers, Msg),
 	remove_handler;
 
+handle_event({update, #rpgb_rec_battlemap{id = MapId}} = Msg, #state{map_id = MapId} = State) ->
+	tell_consumers(State#state.consumers, Msg),
+	{ok, State};
+
 handle_event({delete, rpgb_rec_layer, LayerId} = Msg, State) ->
 	Layers = State#state.layers,
 	case lists:delete(LayerId, Layers) of
@@ -75,9 +79,10 @@ handle_event({delete, rpgb_rec_layer, LayerId} = Msg, State) ->
 			{ok, State#state{layers = Layers1}}
 	end;
 
-handle_event({update, #rpgb_rec_battlemap{id = MapId}} = Msg, #state{map_id = MapId} = State) ->
+handle_event({_NotDelete, #rpgb_rec_layer{battlemap_id = MapId} = Layer} = Msg, #state{map_id = MapId} = State) ->
+	Layers = lists:keystore(Layer#rpgb_rec_layer.id, #rpgb_rec_layer.id, State#state.layers, Layer),
 	tell_consumers(State#state.consumers, Msg),
-	{ok, State};
+	{ok, State#state{layers = Layers}};
 
 %handle_event({new, Map}, State) when is_record(Map, rpgb_rec_battlemap) ->
 %	{ok, State}.

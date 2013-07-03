@@ -5,7 +5,7 @@
 -include("rpg_battlemap.hrl").
 
 -export([make_json/1, make_json/3]).
--export([get_map_layers/1]).
+%-export([get_map_layers/1]).
 -export([delete/1]).
 
 make_json(Layer) ->
@@ -18,16 +18,6 @@ make_json(Layer, Zones, Auras) ->
 	ZoneJsons = [rpgb_rec_zone:make_json(Zone, Layer#rpgb_rec_layer.battlemap_id) || Zone <- Zones],
 	AurasJsons = [rpgb_rec_zone:make_json(Aura, Layer#rpgb_rec_layer.battlemap_id) || Aura <- Auras],
 	Layer:to_json([{url, Url}, {zones, ZoneJsons}, {auras, AurasJsons}, first_aura_id, first_zone_id]).
-
-get_map_layers(InitialId) ->
-	GotLayer = rpgb_data:get_by_id(rpgb_rec_layer, InitialId),
-	get_map_layers(GotLayer, []).
-
-get_map_layers({error, notfound}, Acc) ->
-	lists:reverse(Acc);
-get_map_layers({ok, Layer}, Acc) ->
-	NextLayer = rpgb_data:get_by_id(rpgb_rec_layer, Layer#rpgb_rec_layer.next_layer_id),
-	get_map_layers(NextLayer, [Layer | Acc]).
 
 delete(#rpgb_rec_layer{id = Id}) ->
 	delete(Id);

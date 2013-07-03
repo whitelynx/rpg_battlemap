@@ -54,11 +54,11 @@ websocket_handle({text, Msg}, Req, State) ->
 			From = proplists:get_value(<<"reply_with">>, Json),
 			dispatch(Req, State, From, Action, Type, Id, Data)
 	end;
-websocket_handle(Msg, Req, State) ->
+websocket_handle(_Msg, Req, State) ->
 	{ok, Req, State}.
 
 websocket_info({map_event, {update, Record}}, Req, State) ->
-	?debugMsg("map update event"),
+	?debugFmt("map update event: ~p", [Record]),
 	Frame = make_frame(element(1, Record), element(2, Record), <<"put">>, undefined, Record:make_json()),
 	{reply, {text, jsx:to_json(Frame)}, Req, State};
 
@@ -79,7 +79,7 @@ websocket_info(Info, Req, State) ->
 	?debugFmt("Some other info: ~p", [Info]),
 	{ok, Req, State}.
 
-websocket_terminate(Reason, _Req, State) ->
+websocket_terminate(_Reason, _Req, State) ->
 	rpgb_battle:leave(State#state.map#rpgb_rec_battlemap.id),
 	ok.
 
@@ -93,7 +93,7 @@ battle_joined({Req, State}) ->
 			{error, {Req1, State}}
 	end.
 
-get_session({Req, State}) ->
+get_session({Req, _State}) ->
 	{ok, Session, Req1} = rpgb_session:get_or_create(Req),
 	State2 = #state{session = Session},
 	{ok, {Req1, State2}}.
@@ -105,16 +105,6 @@ get_user({Req, State}) ->
 			{error, Req1};
 		User ->
 			{ok, {Req, State#state{user = User}}}
-	end.
-
-get_raw_mapid({Req, State}) ->
-	case cowboy_req:binding(mapid, Req) of
-		{undefined, Req2} ->
-			{ok, Req2} = cowboy_req:reply(404, Req),
-			{error, Req2};
-		{MapId, Req2} ->
-			State2 = State#state{map = MapId},
-			{ok, {Req2, State2}}
 	end.
 
 map_id_is_integer({Req, State}) ->
@@ -164,6 +154,8 @@ maybe_add_type(rpgb_rec_battlemap, Json) ->
 	[{<<"type">>, <<"map">>} | Json];
 maybe_add_type(Type, Json) when is_binary(Type) ->
 	[{<<"type">>, Type} | Json];
+maybe_add_type(rpgb_rec_layer, Json) ->
+	[{<<"type">>, <<"layer">>} | Json];
 maybe_add_type(Huh, Json) ->
 	?debugFmt("I don't understand the type ~p", [Huh]),
 	Json.

@@ -9,14 +9,13 @@ simple_args(http, [Who, Action, #test_map{id = Id}, _Json, Name]) ->
 simple_args(websocket, [{_Socket, Who, MapId}, Action, _Json, Name]) ->
 	[Who, Action, MapId, Name].
 
-command(#state{maps = []}) ->
-	[{call, ?MODULE, http, [rpgb_requests_tests:g_who(), post, undefined, rpgb_prop:g_mapjson(), rpgb_prop:g_name()]}];
-command(State) ->
-	[{call, ?MODULE, http, [rpgb_requests_tests:g_who(), rpgb_requests_tests:g_action(), rpgb_requests_tests:g_maybe_exists(State#state.maps), rpgb_prop:g_mapjson(), g_maybe_name()]},
-	{call, ?MODULE, websocket, [rpgb_requests_tests:g_maybe_exists(State#state.ws), rpgb_requests_tests:g_action(), rpgb_prop:g_mapjson(), g_maybe_name()]}].
-
-g_maybe_name() ->
-	oneof([undefined, null, <<>>, rpgb_prop:g_name()]).
+command(#state{maps = []}) -> [
+	{call, ?MODULE, http, [rpgb_requests_tests:g_who(), post, undefined, rpgb_prop:g_mapjson(), rpgb_prop:g_name()]}
+	];
+command(State) -> [
+	{call, ?MODULE, http, [rpgb_requests_tests:g_who(), rpgb_requests_tests:g_action(), rpgb_requests_tests:g_maybe_exists(State#state.maps), rpgb_prop:g_mapjson(), rpgb_prop:g_maybe_name()]},
+	{call, ?MODULE, websocket, [rpgb_requests_tests:g_maybe_exists(State#state.ws), rpgb_requests_tests:g_action(), rpgb_prop:g_mapjson(), rpgb_prop:g_maybe_name()]}
+	].
 
 %% === commands ============================================
 
@@ -35,33 +34,21 @@ http(Who, Action, Map, Json, Name) ->
 	end, [], Sessions),
 	Json2 = case {Map, Json} of
 		{undefined, [{}]} ->
-			?debugFmt("putting id's as participants: ~p", [Ids]),
+			%?debugFmt("putting id's as participants: ~p", [Ids]),
 			[{<<"participant_ids">>, Ids}];
 		{undefined, _} ->
-			?debugFmt("putting id's as participants: ~p", [Ids]),
+			%?debugFmt("putting id's as participants: ~p", [Ids]),
 			[{<<"participant_ids">>, Ids} | Json];
 		_ ->
 			Json
 	end,
-	Json3 = maybe_set_name(Json2, Name),
-	?debugFmt("der json: ~p", [Json3]),
+	Json3 = rpgb_requests_tests:maybe_set_name(Json2, Name),
+	%?debugFmt("der json: ~p", [Json3]),
 	rpgb_requests_tests:send_request(maps, http, Who, Action, Map, Json3, []).
 
 websocket({_SockRef, _Who, MapId} = Socket, Action, Json, Name) ->
-	Json2 = maybe_set_name(Json, Name),
+	Json2 = rpgb_requests_tests:maybe_set_name(Json, Name),
 	rpgb_requests_tests:send_request(maps, Socket, undefined, Action, MapId, Json2, []).
-
-maybe_set_name([{}], undefined) ->
-	[{}];
-
-maybe_set_name([{}], Name) ->
-	[{<<"name">>, Name}];
-
-maybe_set_name(Json,undefined) ->
-	lists:keydelete(<<"name">>, 1, Json);
-
-maybe_set_name(Json, Name) ->
-	[{name, Name} | lists:keydelete(<<"name">>, 1, Json)].
 
 %% === preconditions =======================================
 
@@ -87,24 +74,27 @@ next_state(State, _Result, {call, ?MODULE, http, [notauthed | _]}) ->
 	State;
 
 next_state(State, Result, {call, ?MODULE, http, [Who, post, undefined, Json, Name]}) ->
-	?debugFmt("~n"
-		"=====================~n"
-		"== in case of fail ==~n"
-		"=====================~n"
-		"    State: ~p~n"
-		"    Result: ~p~n"
-		"    Who: ~p~n"
-		"    Json: ~p~n"
-		"    Name: ~p~n", [State, Result, Who, Json, Name]),
-	Json2 = maybe_set_name(Json, Name),
+%	?debugFmt("~n"
+%		"=====================~n"
+%		"== in case of fail ==~n"
+%		"=====================~n"
+%		"    State: ~p~n"
+%		"    Result: ~p~n"
+%		"    Who: ~p~n"
+%		"    Json: ~p~n"
+%		"    Name: ~p~n", [State, Result, Who, Json, Name]),
+	Json2 = rpgb_requests_tests:maybe_set_name(Json, Name),
 	PutValid = map_put_valid(Json2, undefined),
 	NameUnique = map_name_unique(Name, Who, undefined, State#state.maps),
 	if
 		PutValid andalso NameUnique ->
 			TestMap = extract_map(undefined, Who, Result, Name),
-			TestMap2 = TestMap#test_map{name = Name},
-			TestLayer = rpgb_layers_tests:extract_layer(undefined, Who, {map, Result}),
-			TestLayer1 = TestLayer#test_layer{map_id = TestMap2#test_map.id},
+			TestLayer = rpgb_layers_tests:extract_layer(undefined, {map, Result}),
+			TestLayer1 = TestLayer#test_layer{
+				map_id = TestMap#test_map.id,
+				map_url = TestMap#test_map.url
+			},
+			TestMap2 = TestMap#test_map{name = Name, layers = [TestLayer1#test_layer.id]},
 			Maps = State#state.maps ++ [TestMap2],
 			Layers = State#state.layers ++ [TestLayer1],
 			State#state{maps = Maps, layers = Layers};
@@ -116,7 +106,7 @@ next_state(State, _Result, {call, ?MODULE, http, [_Who, put, undefined, _Json, _
 	State;
 
 next_state(State, Result, {call, ?MODULE, http, [Who, put, #test_map{owner = Who} = Original, Json, Name]}) ->
-	Json2 = maybe_set_name(Json, Name),
+	Json2 = rpgb_requests_tests:maybe_set_name(Json, Name),
 	PutValid = map_put_valid(Json2, Original),
 	NameUnique = map_name_unique(Who, Name, Original, State#state.maps),
 	if
@@ -165,7 +155,7 @@ next_state(State, Result, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put,
 	Map = lists:keyfind(MapId, #test_map.id, State#state.maps),
 	case Map of
 		#test_map{owner = Who} ->
-			PutValid = map_put_valid(maybe_set_name(Json, Name), Map),
+			PutValid = map_put_valid(rpgb_requests_tests:maybe_set_name(Json, Name), Map),
 			NameUnique = map_name_unique(Who, Name, Map, State#state.maps),
 			if
 				PutValid andalso NameUnique ->
@@ -183,7 +173,7 @@ next_state(State, Result, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put,
 	end;
 
 next_state(State, _Result, {call, ?MODULE, websocket, _Args}) ->
-	?debugFmt("next_state for websocket", []),
+	%?debugFmt("next_state for websocket", []),
 	State.
 
 map_put_valid(Json, undefined) ->
@@ -257,15 +247,15 @@ postcondition(_State, {call, ?MODULE, http, [_Who, _Action, _Map, _Json, _Name]}
 	false;
 
 postcondition(_State, {call, ?MODULE, http, [_Who, delete, undefined, _Json, _Name]}, {ok, "405", _Heads, _Body}) ->
-	?debugMsg("405 on delete maps"),
+	%?debugMsg("405 on delete maps"),
 	true;
 
 postcondition(_State, {call, ?MODULE, http, [_Who, put, undefined, _Json, _Name]}, {ok, "405", _Heads, _Body}) ->
-	?debugMsg("405 on put on maps"),
+	%?debugMsg("405 on put on maps"),
 	true;
 
 postcondition(_State, {call, ?MODULE, http, [notauthed, _Action, _Map, _Json, _Name]}, {ok, "401", Heads, _Body}) ->
-	?debugMsg("401"),
+	%?debugMsg("401"),
 	proplists:get_value("www-authenticate", Heads) =:= "persona";
 
 postcondition(_State, {call, ?MODULE, http, [Who, _Action, #test_map{owner = Who}, _Json, _Name]}, {ok, "405", _Heads, _Body}) ->
@@ -296,24 +286,24 @@ postcondition(_State, {call, ?MODULE, http, [_Who, put, _Map, _Json, Name]}, {ok
 	end;
 
 postcondition(_State, {call, ?MODULE, http, [_Who, post, undefined, Json, Name]}, {ok, "201", Headers, Body}) ->
-	?debugMsg("201 on post to maps/"),
+	%?debugMsg("201 on post to maps/"),
 	HasLocation = proplists:get_value("location", Headers) =/= undefined,
-	ExpectedBody = jsx:to_term(jsx:to_json(maybe_set_name(Json, Name))),
+	ExpectedBody = jsx:to_term(jsx:to_json(rpgb_requests_tests:maybe_set_name(Json, Name))),
 	DecodedBody = jsx:to_term(list_to_binary(Body)),
 	rpgb_requests_tests:assert_json(ExpectedBody, DecodedBody) andalso HasLocation;
 
 postcondition(_State, {call, ?MODULE, http, [notpartier, _Action, _Map, _Json, _Name]}, {ok, "403", _Heads, _Body}) ->
-	?debugMsg("403"),
+	%?debugMsg("403"),
 	true;
 
 postcondition(State, {call, ?MODULE, http, [Who, put, #test_map{owner = Who, id = MapId}, Json, Name]}, {ok, "200", _Headers, Body}) ->
-	?debugMsg("200 to pust on maps/mapid"),
-	PostedBody = jsx:to_term(jsx:to_json(maybe_set_name(Json, Name))),
+	%?debugMsg("200 to pust on maps/mapid"),
+	PostedBody = jsx:to_term(jsx:to_json(rpgb_requests_tests:maybe_set_name(Json, Name))),
 	DecodedBody = jsx:to_term(list_to_binary(Body)),
 	JsonOkay = rpgb_requests_tests:assert_json(PostedBody, DecodedBody),
 	JsonOkay andalso lists:all(fun
 		({Socket, SomeWho, Mid}) when Mid =:= MapId ->
-			?debugFmt("asserting ~s's websokcet got update for map ~p", [SomeWho, Mid]),
+			%?debugFmt("asserting ~s's websokcet got update for map ~p", [SomeWho, Mid]),
 			rpgb_requests_tests:assert_ws_frame(Socket, put, undefined, map, MapId, PostedBody);
 		(_) ->
 			true
@@ -324,7 +314,7 @@ postcondition(_State, {call, ?MODULE, http, [notpartier, get, undefined, _Json, 
 	[] =:= GotBody;
 
 postcondition(State, {call, ?MODULE, http, [_Who, get, undefined, _Json, _Name]}, {ok, "200", _Headers, Body}) ->
-	?debugMsg("200 on get to maps"),
+	%?debugMsg("200 on get to maps"),
 	GotBody = jsx:to_term(list_to_binary(Body)),
 	Expected = [P || #test_map{properties = P} <- State#state.maps],
 	GotEnough = length(GotBody) =:= length(Expected),
@@ -334,21 +324,21 @@ postcondition(State, {call, ?MODULE, http, [_Who, get, undefined, _Json, _Name]}
 			false ->
 				false;
 			Map ->
-				rpgb_requests_tests:assert_json(Map#test_map.properties, Json)
+				rpgb_requests_tests:assert_json(proplists:delete(<<"layers">>, Map#test_map.properties), Json)
 		end
 	end, GotBody);
 
 postcondition(_State, {call, ?MODULE, http, [_Who, put, _Map, _Json, _Name]}, {ok, "403", _Headers, _Body}) ->
-	?debugMsg("403 on put"),
+	%?debugMsg("403 on put"),
 	true;
 
 postcondition(_State, {call, ?MODULE, http, [_Who, get, Map, _Json, _Name]}, {ok, "200", _Headers, Body}) ->
-	?debugFmt("200 on get maps/mapid: ~p", [Body]),
+	%?debugFmt("200 on get maps/mapid: ~p", [Body]),
 	GotBody = jsx:to_term(list_to_binary(Body)),
-	rpgb_requests_tests:assert_json(Map#test_map.properties, GotBody);
+	rpgb_requests_tests:assert_json(proplists:delete(<<"layers">>, Map#test_map.properties), GotBody);
 
 postcondition(State, {call, ?MODULE, http, [Who, delete, #test_map{owner = Who, id = MapId}, _Json, _Name]}, {ok, "204", _Headers, _Body}) ->
-	?debugMsg("204 on delete to maps/mapid"),
+	%?debugMsg("204 on delete to maps/mapid"),
 	lists:all(fun
 		({S, _SomeWho, Mid}) when MapId =:= Mid ->
 			rpgb_requests_tests:assert_ws_frame(S, delete, undefined, map, MapId, undefined);
@@ -357,7 +347,7 @@ postcondition(State, {call, ?MODULE, http, [Who, delete, #test_map{owner = Who, 
 	end, State#state.ws);
 
 postcondition(_State, {call, ?MODULE, http, [_Who, delete, _Map, _Json, _Name]}, {ok, "403", _Headers, _Body}) ->
-	?debugMsg("403 on delete to maps"),
+	%?debugMsg("403 on delete to maps"),
 	true;
 
 postcondition(_State, {call, ?MODULE, websocket, _Args}, {_Reply, {error, Wut}}) ->
@@ -365,18 +355,18 @@ postcondition(_State, {call, ?MODULE, websocket, _Args}, {_Reply, {error, Wut}})
 	false;
 
 postcondition(State, {call, ?MODULE, websocket, [{Socket, _Who, MapId}, get, _Json, _Name]}, {ReplyTo, ReplyFrame}) ->
-	?debugMsg("websocket get maps"),
+	%?debugMsg("websocket get maps"),
 	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
 		false ->
 			ErrorFrame = rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ReplyTo, undefined),
 			Next = gen_websocket:recv(Socket, 1000),
 			ErrorFrame andalso Next == {error, timeout};
 		Map ->
-			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, true, reply, ReplyTo, Map#test_map.properties)
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, true, reply, ReplyTo, proplists:delete(<<"layers">>, Map#test_map.properties))
 	end;
 
 postcondition(_State, {call, ?MODULE, websocket, [_Socket, delete, _Json, _Name]}, {ReplyTo, ReplyFrame}) ->
-	?debugMsg("websocket delete"),
+	%?debugMsg("websocket delete"),
 	rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ReplyTo, undefined);
 
 %postcondition(State, {call, ?MODULE, websocket, [{Socket, _Who, MapId}, Action, Json]}, {ReplyTo, ReplyFrame}) ->
@@ -391,10 +381,10 @@ postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put, Json
 	Map = lists:keyfind(MapId, #test_map.id, State#state.maps),
 	case Map of
 		false ->
-			?debugFmt("Could not find map ~p", [MapId]),
+			%?debugFmt("Could not find map ~p", [MapId]),
 			{error, closed} =:= gen_websocket:recv(Socket, 1000);
 		#test_map{owner = Who} ->
-			Json2 = maybe_set_name(Json, Name),
+			Json2 = rpgb_requests_tests:maybe_set_name(Json, Name),
 			NameUnique = map_name_unique(Who, Name, Map, State#state.maps),
 			NameValid = map_put_valid(Json2, Map),
 			if
@@ -412,25 +402,25 @@ postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put, Json
 	end;
 
 postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put, Json, Name]}, {ReplyTo, ReplyFrame}) ->
-	?debugFmt("The reply to is ~p", [ReplyTo]),
+	%?debugFmt("The reply to is ~p", [ReplyTo]),
 	Map = lists:keyfind(MapId, #test_map.id, State#state.maps),
 	case Map of
 		false ->
-			?debugFmt("Could not find map ~p", [MapId]),
+			%?debugFmt("Could not find map ~p", [MapId]),
 			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ReplyTo, <<"not owner">>),
 			Closed = gen_websocket:recv(Socket, 1000),
 			Closed == {error, closed};
 		#test_map{owner = Who} ->
 			NameUnique = map_name_unique(Who, Name, Map, State#state.maps),
-			Json2 = maybe_set_name(Json, Name),
+			Json2 = rpgb_requests_tests:maybe_set_name(Json, Name),
 			NameValid = map_put_valid(Json2, Map),
 			if
 				NameUnique andalso NameValid ->
 					FirstFrame = rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, true, reply, ReplyTo, Json2),
 					AllOthers = lists:all(fun
 						({S, _W, Mid} = Sdata) when Mid =:= MapId ->
-							?debugFmt("dealing with socket ~p", [Sdata]),
-							rpgb_requests_tests:assert_ws_frame(S, put, undefined, map, MapId, maybe_set_name(Json, Name));
+							%?debugFmt("dealing with socket ~p", [Sdata]),
+							rpgb_requests_tests:assert_ws_frame(S, put, undefined, map, MapId, rpgb_requests_tests:maybe_set_name(Json, Name));
 						(_) ->
 							true
 					end, State#state.ws),
@@ -445,7 +435,7 @@ postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put, Json
 	end;
 
 postcondition(_State, {call, ?MODULE, websocket, [{_Socket, _Who, _MapId}, post, _Json, _Name]}, {ReplyTo, ReplyFrame}) ->
-	?debugMsg("websocket post"),
+	%?debugMsg("websocket post"),
 	rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ReplyTo, <<"invalid method">>);
 
 postcondition(State, Call, Res) ->

@@ -19,5 +19,5 @@ handle(Req, {{Host, Port}, Template} = Ctx) ->
 	{ok, Req2} = cowboy_req:reply(200, [], Output, Req1),
 	{ok, Req2, Ctx}.
 
-terminate(Req, Ctx) ->
+terminate(_Req, _Ctx) ->
 	ok.
