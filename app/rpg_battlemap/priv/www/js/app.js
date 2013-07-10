@@ -23,19 +23,32 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		var ws = false;
 		var listeners = {};
 
-		var connectMap = function(mapObj){
-			var connectingDefer = $q.defer();
+		var connectingDefer = false;
+		var connectingResolved = true;
 
-			console.log('connecting to map ws', mapObj.websocketUrl, ws ? true : false);
+		var connectMap = function(mapObj){
+			if(mapObj.websocketUrl == mapUrl){
+				console.log('connection already established', mapObj.websocketUrl);
+				return connectingDefer.promise;
+			}
+
 			if(ws){
 				ws.close();
+				if(! connectingResolved){
+					$rootScope.$apply(connectingDefer.reject("connection closed"));
+				}
 			}
+
+			connectingDefer = $q.defer();
+
+			console.log('connecting to map ws', mapObj.websocketUrl, ws ? true : false);
 
 			mapUrl = mapObj.websocketUrl;
 			ws = new WebSocket(mapUrl);
 
 			ws.onopen = function(ev){
 				console.log('resolving connection', $rootScope);
+				connectingResolved = true;
 				$rootScope.$apply(connectingDefer.resolve(ev));
 			};
 
@@ -44,10 +57,13 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 			};
 
 			ws.onclose = function(ev){
-				console.log('connection closing', connectingDefer);
-				if(connectingDefer){
+				if(! connectingResolved){
 					$rootScope.$apply(connectingDefer.reject("connection closed"));
 				}
+				mapUrl = false;
+				connectinDefer = false;
+				connectingResolved = true;
+				console.log('connection closing', connectingDefer);
 			}
 
 			return connectingDefer.promise;
@@ -76,10 +92,12 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				'posted': new Date(),
 				'defer': defer
 			};
-			if(ws.readyState){
-				ws.send(JSON.stringify(request));
-			} else {
-				defer.reject("no websocket connected");
+			if(connectingDefer){
+				connectingDefer.promise.then(function(){
+					ws.send(JSON.stringify(request));
+				}, function(error){
+					defer.reject(error);
+				})
 			}
 			console.log('the defer', defer);
 			return defer.promise;
