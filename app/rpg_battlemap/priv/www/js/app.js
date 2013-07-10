@@ -76,10 +76,10 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				'posted': new Date(),
 				'defer': defer
 			};
-			if(! ws){
-				defer.reject("no websocket connected");
-			} else {
+			if(ws.readyState){
 				ws.send(JSON.stringify(request));
+			} else {
+				defer.reject("no websocket connected");
 			}
 			console.log('the defer', defer);
 			return defer.promise;

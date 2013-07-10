@@ -98,20 +98,18 @@ resource_exists(Req, #ctx{layerid = LayerId} = Ctx) ->
 	{true, Req, Ctx#ctx{layer = Layer}}.
 
 delete_resource(Req, #ctx{mapid = MapId} = Ctx) ->
-	{ok, Layers} = rpgb_data:search(rpgb_rec_layer, [{battlemap_id, MapId}]),
-	?debug("Found layers ~p", [Layers]),
-	case Layers of
-		[_Elem] ->
+	#ctx{map = Map, layerid = LayerId, layer = Layer} = Ctx,
+	case rpgb_rec_layer:delete(Layer, Map) of
+		{ok, Map2} ->
+			{true, Req, Ctx};
+		{error, last_layer} ->
 			Req2 = cowboy_req:set_resp_body(<<"you cannot delete the last layer of a map">>, Req),
 			{ok, Req3} = cowboy_req:reply(422, Req2),
 			{halt, Req3, Ctx};
-		_ ->
-			#ctx{map = Map, layerid = LayerId, layer = Layer} = Ctx,
-			MapLayerList = lists:delete(LayerId, Map#rpgb_rec_battlemap.layer_ids),
-			Map2 = Map#rpgb_rec_battlemap{layer_ids = MapLayerList},
-			rpgb_data:save(Map2),
-			rpgb_data:delete(Layer),
-			{true, Req, Ctx}
+		{error, Wut} ->
+			Req2 = cowboy_req:set_resp_body(io_lib:format("unknown error: ~p", [Wut])),
+			{ok, Req3} = cowboy_req:reply(500, Req2),
+			{halt, Req3, Ctx}
 	end.
 
 content_types_provided(Req, Ctx) ->
@@ -144,26 +142,20 @@ from_json(Req, #ctx{layerid = maplayers} = Ctx) ->
 	},
 	{ok, Body, Req1} = cowboy_req:body(Req),
 	Term = jsx:to_term(Body),
-	case validate_layer(Term, InitialLayer) of
-		{ok, {_Json, Rec}} ->
+	case rpgb_rec_layer:update_from_json(Term, InitialLayer) of
+		{ok, Rec} ->
 			{ok, Rec2} = rpgb_data:save(Rec),
-			case lists:member(Rec2#rpgb_rec_layer.id, Map#rpgb_rec_battlemap.layer_ids) of
-				true ->
-					ok;
-				false ->
-					MapLayerList = Map#rpgb_rec_battlemap.layer_ids ++ [Rec2#rpgb_rec_layer.id],
-					rpgb_data:save(Map#rpgb_rec_battlemap{layer_ids = MapLayerList})
-			end,
-			Ctx2 = Ctx#ctx{layer = Rec2, layerid = Rec2#rpgb_rec_layer.id},
+			MapLayerList = Map#rpgb_rec_battlemap.layer_ids ++ [Rec2#rpgb_rec_layer.id],
+			{ok, Map2} = rpgb_data:save(Map#rpgb_rec_battlemap{layer_ids = MapLayerList}),
+			Ctx2 = Ctx#ctx{layer = Rec2, layerid = Rec2#rpgb_rec_layer.id, map = Map2},
 			Location = make_location(Req1, Ctx2, Rec2),
-			Req2 = cowboy_req:set_resp_header(<<"location">>, Location, Req1),
-			{OutBody, Req3, Ctx3} = to_json(Req2, Ctx2),
-			Req4 = cowboy_req:set_resp_body(OutBody, Req3),
-			{true, Req4, Ctx3};
-		{error, Status, ErrBody} ->
-			ErrBody2 = jsx:to_json(ErrBody),
-			Req2 = cowboy_req:set_resp_body(ErrBody2, Req1),
-			{ok, Req3} = cowboy_req:reply(Status, Req2),
+			{{true, Location}, Req1, Ctx2};
+		{error, {invalid, Msg}} ->
+			Req2 = cowboy_req:set_resp_body(jsx:to_json(Msg), Req1),
+			{false, Req2, Ctx};
+		{error, {conflict, Msg}} ->
+			Req2 = cowboy_req:set_resp_body(jsx:to_json(Msg), Req1),
+			Req3 = cowboy_req:reply(422, Req2),
 			{halt, Req3, Ctx}
 	end;
 
@@ -172,25 +164,18 @@ from_json(Req, #ctx{map = Map, layer = InitL} = Ctx) ->
 	{ok, Body, Req1} = cowboy_req:body(Req),
 	Term = jsx:to_term(Body),
 	?debug("Submitted json:  ~p", [Term]),
-	case validate_layer(Term, InitialLayer) of
-		{ok, {_DerJson, Rec}} ->
-			{ok, Rec3} = rpgb_data:save(Rec),
-			{ok, Map2} = rpgb_data:get_by_id(rpgb_rec_battlemap, Map#rpgb_rec_battlemap.id),
-			{ok, Map3} = case lists:member(Rec3#rpgb_rec_layer.id, Map2#rpgb_rec_battlemap.layer_ids) of
-				false ->
-					MapLayerList = Map2#rpgb_rec_battlemap.layer_ids ++ [Rec3#rpgb_rec_layer.id],
-					rpgb_data:save(Map2#rpgb_rec_battlemap{layer_ids = MapLayerList});
-				true ->
-					{ok, Map2}
-			end,
-			Ctx2 = Ctx#ctx{layer = Rec3, map = Map3},
-			{OutBody, Req2, Ctx3} = to_json(Req1, Ctx2),
-			Req3 = cowboy_req:set_resp_body(OutBody, Req2),
-			{true, Req3, Ctx3};
-		{error, Status, ErrBody} ->
-			ErrBody2 = jsx:to_json(ErrBody),
-			Req2 = cowboy_req:set_resp_body(ErrBody2, Req1),
-			{ok, Req3} = cowboy_req:reply(Status, Req2),
+	case rpgb_rec_layer:update_from_json(Term, InitialLayer) of
+		{ok, Rec} ->
+			{ok, Rec2} = rpgb_data:save(Rec),
+			Ctx2 = Ctx#ctx{layer = Rec2, layerid = Rec2#rpgb_rec_layer.id},
+			Req2 = cowboy_req:set_resp_body(jsx:to_json(rpgb_rec_layer:make_json(Rec2)), Req1),
+			{true, Req2, Ctx};
+		{error, {invalid, Msg}} ->
+			Req2 = cowboy_req:set_resp_body(jsx:to_json(Msg), Req1),
+			{false, Req2, Msg};
+		{error, {conflict, Msg}} ->
+			Req2 = cowboy_req:set_resp_body(jsx:to_json(Msg), Req1),
+			Req3 = cowboy_req:reply(422, Req2),
 			{halt, Req3, Ctx}
 	end.
 
@@ -199,87 +184,6 @@ make_json(_Req, _Ctx, Layer) ->
 
 make_location(_Req, _Ctx, Rec) ->
 	rpgb:get_url(["maps", integer_to_list(Rec#rpgb_rec_layer.battlemap_id), "layers", integer_to_list(Rec#rpgb_rec_layer.id)]).
-
-validate_layer(Json, InitLayer) ->
-	ValidateFuns = [
-		fun scrub_disallowed/1,
-		fun check_blank_name/1,
-		fun check_name_conflict/1,
-		fun validate_json/1,
-		fun check_named_layer/1
-	],
-	rpgb:bind({Json, InitLayer}, ValidateFuns).
-
-check_named_layer({Json, Layer}) ->
-	LayerName = Layer#rpgb_rec_layer.name,
-	JsonName = proplists:get_value(<<"name">>, Json),
-	case {LayerName, JsonName} of
-		{undefined, undefined} ->
-			{error, 422, <<"name cannot be blank">>};
-		_ ->
-			{ok, {Json, Layer}}
-	end.
-
-check_blank_name({Json, Layer}) ->
-	case proplists:get_value(<<"name">>, Json) of
-		<<>> ->
-			{error, 422, <<"name cannot be blank.">>};
-		null ->
-			{error, 422, <<"name cannot be blank.">>};
-		_ ->
-			{ok, {Json, Layer}}
-	end.
-
-check_name_conflict({Json, Layer}) ->
-	#rpgb_rec_layer{battlemap_id = MapId, name = LayerName} = Layer,
-	case proplists:get_value(<<"name">>, Json) of
-		undefined ->
-			{ok, {Json, Layer}};
-		LayerName ->
-			{ok, {Json, Layer}};
-		OtherName ->
-			Searched = rpgb_data:search(rpgb_rec_layer, [
-				{name, OtherName}, {battlemap_id, MapId}]),
-			case Searched of
-				{ok, []} ->
-					{ok, {Json, Layer}};
-				_ ->
-					{error, 409, <<"you already have a layer by that name.">>}
-			end
-	end.
-
-scrub_disallowed({Json, Map}) ->
-	{ok, Json2} = scrub_disallowed(Json),
-	{ok, {Json2, Map}};
-
-scrub_disallowed([{}]) ->
-	{ok, [{}]};
-
-scrub_disallowed(Json) ->
-	Disallowed = [<<"id">>, <<"battlemap_id">>, <<"created">>, <<"updated">>],
-	Disallowed1 = ordsets:from_list(Disallowed),
-	Json1 = ordsets:from_list(Json),
-	scrub_disallowed(Json1, Disallowed1).
-
-scrub_disallowed(Json, []) ->
-	{ok, Json};
-
-scrub_disallowed(Json, [Nope | Tail] = Nopes) ->
-	case proplists:delete(Nope, Json) of
-		Json ->
-			scrub_disallowed(Json, Tail);
-		Json1 ->
-			scrub_disallowed(Json1, Nopes)
-	end.
-
-validate_json({Json, Layer}) ->
-	case Layer:from_json(Json) of
-		{ok, Layer2} ->
-			{ok, {Json, Layer2}};
-		{_, Else} ->
-			Body = iolist_to_binary(io_lib:format("There were errors in the submitted json: ~p", [Else])),
-			{error, 422, Body}
-	end.
 
 generate_etag(Req, #ctx{mapid = undefined} = Ctx) ->
 	{undefined, Req, Ctx};

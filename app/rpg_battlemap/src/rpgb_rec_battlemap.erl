@@ -6,7 +6,7 @@
 
 -export([make_json/1, make_json/3]).
 -export([delete/1]).
--export([get_by_participant/1, is_user_participant/2]).
+-export([get_by_participant/1, is_user_participant/2, is_user_owner/2]).
 -export([update_from_json/2]).
 
 make_json(Map) ->
@@ -58,6 +58,11 @@ is_user_participant(User, Map) ->
 	ParticipantIds = Map#rpgb_rec_battlemap.participant_ids,
 	UserId = User#rpgb_rec_user.id,
 	lists:member(UserId, ParticipantIds).
+
+is_user_owner(#rpgb_rec_user{id = Id}, #rpgb_rec_battlemap{owner_id = Id}) ->
+	true;
+is_user_owner(_User, _Map) ->
+	false.
 
 update_from_json(Json, InitMap) ->
 	ValidateFuns = [

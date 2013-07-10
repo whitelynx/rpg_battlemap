@@ -30,8 +30,8 @@ simple_args(websocket_reorder, [{_Socket, Who, Id}, _Order, _Layers]) ->
 command(#state{maps = []}) ->
 	[];
 command(State) -> [
-	{call, ?MODULE, http, [rpgb_requests_tests:g_maybe_exists(State#state.maps), rpgb_requests_tests:g_who(), rpgb_requests_tests:g_action(), rpgb_requests_tests:g_maybe_exists(State#state.layers), rpgb_prop:g_layerjson(), rpgb_prop:g_maybe_name()]}
-	%,{call, ?MODULE, websocket, [rpgb_requests_tests:g_maybe_exists(State#state.ws), rpgb_requests_tests:g_action(), rpgb_requests_tests:g_maybe_exists(State#state.layers), rpgb_prop:g_layerjson(), rpgb_prop:g_maybe_name()]}
+	{call, ?MODULE, http, [rpgb_requests_tests:g_maybe_exists(State#state.maps), rpgb_requests_tests:g_who(), rpgb_requests_tests:g_action(), rpgb_requests_tests:g_maybe_exists(State#state.layers), rpgb_prop:g_layerjson(), rpgb_prop:g_maybe_name()]},
+	{call, ?MODULE, websocket, [rpgb_requests_tests:g_maybe_exists(State#state.ws), rpgb_requests_tests:g_action(), rpgb_requests_tests:g_maybe_exists(State#state.layers), rpgb_prop:g_layerjson(), rpgb_prop:g_maybe_name()]}
 	%,{call, ?MODULE, http_reorder, [rpgb_requests_tests:g_who(), rpgb_requests_tests:g_maybe_exists(State#state.maps), g_shuffle_order(State#state.layers), State#state.layers]}
 	%,{call, ?MODULE, websocket_reorder, [rpgb_requests_tests:g_maybe_exists(State#state.ws), g_shuffle_order(State#state.layers), State#state.layers]}
 	].
@@ -117,6 +117,46 @@ next_state(State, {ok, "200", _Head, _Body} = Res, {call, ?MODULE, http, [_Map, 
 	Layer2 = extract_layer(Layer, Res),
 	Layers = lists:keystore(Layer2#test_layer.id, #test_layer.id, State#state.layers, Layer2),
 	State#state{layers = Layers};
+
+next_state(State, _Res, {call, ?MODULE, websocket, [{Socket, Who, MapId}, delete, #test_layer{map_id = MapId} = Layer | _]}) ->
+	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
+		false ->
+			Layers = lists:keydelete(Layer#test_layer.id, #test_layer.id, State#state.layers),
+			State#state{layers = Layers};
+		#test_map{owner = Who} ->
+			Layers = lists:keydelete(Layer#test_layer.id, #test_layer.id, State#state.layers),
+			State#state{layers = Layers};
+		_ ->
+			State
+	end;
+
+next_state(State, Res, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put, #test_layer{map_id = MapId} = Layer, _Json, Name]}) when is_binary(Name), Name =/= <<>>; Name =:= undefined ->
+	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
+		false ->
+			State;
+		#test_map{owner = Who} ->
+			Layer2 = extract_layer(Layer, Res),
+			Layers = lists:keystore(Layer2#test_layer.id, #test_layer.id, State#state.layers, Layer2),
+			State#state{layers = Layers};
+		_ ->
+			State
+	end;
+
+next_state(State, Res, {call, ?MODULE, websocket, [{Socket, Who, MapId}, post, undefined, _Json, Name]}) when is_binary(Name), Name =/= <<>> ->
+	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
+		false ->
+			State;
+		#test_map{owner = Who} = Map ->
+			Layer = extract_layer(undefined, Res),
+			Layer2 = Layer#test_layer{map_id = MapId, map_url = Map#test_map.url},
+			Layers = lists:keystore(Layer#test_layer.id, #test_layer.id, State#state.layers, Layer2),
+			MapLayers = Map#test_map.layers ++ [Layer2#test_layer.id],
+			Map2 = Map#test_map{layers = MapLayers},
+			Maps = lists:keystore(Map2#test_map.id, #test_map.id, State#state.maps, Map2),
+			State#state{maps = Maps, layers = Layers};
+		_ ->
+			State
+	end;
 
 next_state(State, _Result, {call, ?MODULE, _Func, _Args}) ->
 	State.
@@ -271,6 +311,67 @@ postcondition(State, {call, ?MODULE, http, [_Map, Who, delete, Layer, _Json, _Na
 			?debugFmt("Who ~p should not have been able to delete layer ~p for map ~p", [Who, Layer, Map]),
 			false
 	end;
+
+postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, delete, #test_layer{map_id = MapId} = Layer | _]}, {ResId, ReplyFrame}) ->
+	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
+		false ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, []);
+		#test_map{owner = Who} ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, true, reply, ResId, []);
+		_ ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, <<"only the map owner can update layers">>)
+	end;
+
+postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, put, #test_layer{map_id = MapId} = Lyaer, Json, Name]}, {ResId, ReplyFrame}) when is_binary(Name), Name =/= <<>>; Name =:= undefined ->
+	Json2 = rpgb_requests_tests:maybe_set_name(Json, Name),
+	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
+		false ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, []);
+		#test_map{owner = Who} ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, true, reply, ResId, Json2);
+		_ ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, <<"only the map owner can update layers">>)
+	end;
+
+postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, post, undefined, Json, Name]}, {ResId, ReplyFrame}) ->
+	Json2 = rpgb_requests_tests:maybe_set_name(Json, Name),
+	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
+		false ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, []);
+		#test_map{owner = Who} when is_binary(Name), Name =/= <<>> ->
+			ReplyTrue = rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, true, reply, ResId, Json2),
+			SocketsToCheck = [Tuple || {_Socket, _Who, Mid} = Tuple <- State#state.ws, Mid =:= MapId],
+			TestFun = fun({Sock, _, _}) ->
+					{ok, {text, Binary}} = ReplyFrame,
+					DerJson = jsx:to_term(Binary),
+					ExpectId = proplists:get_value(<<"id">>, DerJson),
+					Frame = gen_websocket:recv(Sock, 1000),
+					GotLayer = rpgb_requests_tests:assert_ws_frame(Frame, put, undefined, layer, ExpectId, Json2),
+					MapFrame = gen_websocket:recv(Socket, 1000),
+					GotMap = rpgb_requests_tests:assert_ws_frame(MapFrame, put, undefined, map, MapId, []),
+					GotMap andalso GotLayer
+				end,
+				ReplyTrue andalso lists:all(TestFun, SocketsToCheck);
+		#test_map{owner = Who} ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, <<"invalid name">>);
+		_ ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, <<"only owner can update layers">>)
+	end;
+
+postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, post, _Layer, _Json, _Name]}, {ResId, ReplyFrame}) ->
+	case lists:keyfind(MapId, #test_map.id, State#state.maps) of
+		false ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, []);
+		#test_map{owner = Who} ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, <<"invalid action">>);
+		_ ->
+			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, <<"invalid action">>)
+	end;
+
+postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, get, undefined, _Json, _Name]}, {ResId, ReplyFrame}) ->
+	Map = lists:keyfind(MapId, #test_map.id, State#state.maps),
+	Layers = [lists:keyfind(LayerId, #test_layer.id, State#state.layers) || LayerId <- Map#test_map.layers],
+	
 
 postcondition(State, Call, Res) ->
 	?debugFmt("Fall through postcondition:~n"

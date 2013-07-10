@@ -52,6 +52,7 @@ websocket_handle({text, Msg}, Req, State) ->
 			Id = proplists:get_value(<<"id">>, Json),
 			Data = proplists:get_value(<<"data">>, Json),
 			From = proplists:get_value(<<"reply_with">>, Json),
+			?debugFmt("dispatch action ~p for ~p:~p", [Action, Type, Id]),
 			dispatch(Req, State, From, Action, Type, Id, Data)
 	end;
 websocket_handle(_Msg, Req, State) ->
@@ -60,7 +61,13 @@ websocket_handle(_Msg, Req, State) ->
 websocket_info({map_event, {update, Record}}, Req, State) ->
 	?debugFmt("map update event: ~p", [Record]),
 	Frame = make_frame(element(1, Record), element(2, Record), <<"put">>, undefined, Record:make_json()),
-	{reply, {text, jsx:to_json(Frame)}, Req, State};
+	State2 = if
+		is_record(Record, rpgb_rec_battlemap) ->
+			State#state{map = Record};
+		true ->
+			State
+	end,
+	{reply, {text, jsx:to_json(Frame)}, Req, State2};
 
 websocket_info({map_event, {new, Record}}, Req, State) ->
 	?debugMsg("map new event"),
@@ -138,6 +145,10 @@ user_is_participant({Req, State}) ->
 			{ok, Req1} = cowboy_req:reply(403, Req),
 			{error, Req1}
 	end.
+
+user_is_owner(State) ->
+	#state{user = User, map = Map} = State,
+	rpgb_rec_battlemap:is_user_owner(User, Map).
 
 make_reply(From, Accepted, Data) ->
 	Json = make_frame(<<"reply">>, From, <<"reply">>, Accepted, Data),
@@ -221,6 +232,105 @@ dispatch(Req, State, From, <<"delete">>, <<"map">>, _Id, _Json) ->
 dispatch(Req, State, From, _Action, <<"map">>, _Id, _Json) ->
 	Reply = make_reply(From, false, <<"invalid method">>),
 	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"delete">>, <<"layer">>, undefined, _Json) ->
+	Reply = make_reply(From, false, <<"must specify layer">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"delete">>, <<"layer">>, Id, _Json) ->
+	UserIsOwner = user_is_owner(State),
+	MapId = State#state.map#rpgb_rec_battlemap.id,
+	Reply = if
+		UserIsOwner ->
+			case rpgb_data:get_by_id(rpgb_rec_layer, Id) of
+				{error, notfound} ->
+					make_reply(From, false, <<"not_found">>);
+				{ok, #rpgb_rec_layer{battlemap_id = MapId} = Layer} ->
+					case rpgb_rec_layer:delete(Layer, State#state.map) of
+						{ok, Map2} ->
+							make_reply(From, true, undefined);
+						{error, last_layer} ->
+							make_reply(From, false, <<"cannot delete last layer">>);
+						{error, Wut} ->
+							make_reply(From, false, io_lib:format("unknown error: ~p", [Wut]))
+					end;
+				{ok, _Layer} ->
+					make_reply(From, false, <<"layer not part of map">>)
+			end;
+		true ->
+			make_reply(From, false, <<"only owner can delete layers">>)
+	end;
+
+dispatch(Req, State, From, <<"get">>, <<"layer">>, undefined, _Json) ->
+	DataReses = lists:map(fun(Id) ->
+		Res = rpgb_data:get_by_id(rpgb_rec_layer, Id),
+		element(2, Res)
+	end, State#state.map#rpgb_rec_battlemap.layer_ids),
+	Layers = lists:filter(fun(MaybeLayer) ->
+		is_record(MaybeLayer, rpgb_rec_layer)
+	end, DataReses),
+	Json = lists:map(fun(Layer) ->
+		rpgb_rec_layer:make_json(Layer)
+	end, Layers),
+	Reply = make_reply(From, true, Json),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"get">>, <<"layer">>, Id, _Json) ->
+	Reply = case rpgb_data:get_by_id(rpgb_rec_layer, Id) of
+		{ok, #rpgb_rec_layer{battlemap_id = MapId} = Layer} when MapId =:= State#state.map#rpgb_rec_battlemap.id ->
+				Json = rpgb_rec_layer:make_json(Layer),
+				make_reply(From, true, Json);
+		_ ->
+			make_reply(From, false, <<"layer not found">>)
+	end,
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"put">>, <<"layer">>, undefined, _Json) ->
+	Reply = make_reply(From, false, <<"cannot put to layers list">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"put">>, <<"layer">>, Id, Json) ->
+	Reply = case user_is_owner(State) of
+		false ->
+			make_reply(From, false, <<"only owner may edit map layers">>);
+		true ->
+			case rpgb_rec_layer:update_from_json(Json, Id) of
+				{ok, Rec} ->
+					{ok, Rec2} = rpgb_data:save(Rec),
+					OutJson = rpgb_rec_layer:make_json(Rec2),
+					make_reply(From, true, OutJson);
+				{error, {_Atom, Msg}} ->
+					make_reply(From, false, Msg)
+			end
+	end,
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"post">>, <<"layer">>, undefined, Json) ->
+	Reply = case user_is_owner(State) of
+		false ->
+			make_reply(From, false, <<"only owner may edit map layers">>);
+		true ->
+			InitLayer = #rpgb_rec_layer{
+				battlemap_id = State#state.map#rpgb_rec_battlemap.id,
+				created = os:timestamp(),
+				updated = os:timestamp()
+			},
+			case rpgb_rec_layer:update_from_json(Json, InitLayer) of
+				{ok, Rec} ->
+					{ok, Rec2} = rpgb_data:save(Rec),
+					Map = State#state.map,
+					MapLayers = Map#rpgb_rec_battlemap.layer_ids ++ [Rec2#rpgb_rec_layer.id],
+					rpgb_data:save(Map#rpgb_rec_battlemap{layer_ids = MapLayers}),
+					make_reply(From, true, rpgb_rec_layer:make_json(Rec2));
+				{error, {_Atom, Msg}} ->
+					make_reply(From, false, Msg)
+			end
+	end,
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"post">>, <<"layer">>, _Layer, _Json) ->
+	Reply = make_reply(From, false, <<"invalid action">>),
+	{reply, {reply, Reply}, Req, State};
 
 dispatch(Req, State, From, Action, Type, Id, Data) ->
 	?debugFmt("no reply, just not gonna do anything~n"

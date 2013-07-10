@@ -51,6 +51,15 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 
 });
 
+Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource, MapSocket){
+	console.log('layers list ctrl', $scope, $scope.map.id);
+	$scope.layers = [];
+	MapSocket.get('layer').then(function(success){
+		$scope.layers = success;
+	}, function(fail){
+		console.log('could not get layers', fail);
+	});
+});
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 		// the resource thing doesn't really do hateaos well, but then again
@@ -73,7 +82,7 @@ Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 	};
 
 	$scope.createMap = function(){
-		var mapPromise = Map.create({name: $scope.newMapName});
+		var mapPromise = $rootScope.Map.create({name: $scope.newMapName});
 		mapPromise.$then(function(success){
 			$rootScope.maps.push(success.data);
 			$scope.newMapName = '';
