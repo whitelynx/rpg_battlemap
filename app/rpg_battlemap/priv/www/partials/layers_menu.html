@@ -4,7 +4,7 @@
 
 	<li ng-repeat="layer in layers" style="clear:both;">
 		<p ng-click="layer.visible = ! layer.visible">
-			<i ng-class="{'icon-eye-open':layer.visible}"></i>
+			<i class="icon-fixed-width" ng-class="{'icon-eye-open':layer.visible}"></i>
 			{{ layer.name }}
 			<button ng-hide="layers.length < 2" ng-click="removeLayer(layer)" class="pull-right">
 				<i class="icon-remove"></i>
