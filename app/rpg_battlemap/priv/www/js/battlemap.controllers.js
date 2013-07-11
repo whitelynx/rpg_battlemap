@@ -85,6 +85,11 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 			console.error('could not delete layer', layer, fail);
 		})
 	}
+
+	$scope.selectLayer = function(layer){
+		console.log('yo');
+		$scope.layers.selected = layer;
+	}
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
