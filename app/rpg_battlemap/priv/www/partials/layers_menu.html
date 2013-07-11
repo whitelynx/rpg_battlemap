@@ -1,5 +1,7 @@
 <a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Layers<span class="caret"> </span></a>
 
 <ul class="dropdown-menu" ng-controller="ListLayersCtrl">
-	<li ng-repeat="layer in layers">{{ layer.name }}</li>
+	<li ng-repeat="layer in layers">
+		<i ng-class="{'icon-eye-open':layer.visible}"></i> {{ layer.name }}
+	</li>
 </ul>

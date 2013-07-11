@@ -57,6 +57,7 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 	MapSocket.query('layer').then(function(success){
 		console.log('got layers', success);
 		$scope.layers = success;
+		$scope.layers[0].visible = true;
 	}, function(fail){
 		console.error('could not get layers', fail);
 	});
