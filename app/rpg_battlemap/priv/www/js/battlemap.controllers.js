@@ -54,10 +54,11 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource, MapSocket){
 	console.log('layers list ctrl', $scope, $scope.map.id);
 	$scope.layers = [];
-	MapSocket.get('layer').then(function(success){
+	MapSocket.query('layer').then(function(success){
+		console.log('got layers', success);
 		$scope.layers = success;
 	}, function(fail){
-		console.log('could not get layers', fail);
+		console.error('could not get layers', fail);
 	});
 });
 
@@ -108,6 +109,8 @@ Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 
 Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope, $resource, MapSocket) {
 	$scope.map = {};
+
+	$scope.noToolbar = false;
 
 	var mapPromise = $rootScope.Map.get($routeParams);
 	mapPromise.$then(function (success) {
@@ -185,9 +188,9 @@ Controllers.controller("HeaderCtrl", function($scope) {
 
 	// Gets the current state of the top bar; either open, or closed.
 	$scope.getCollapseState = function() {
-		var topBar = angular.element("#top-bar");
+		var topBar = document.querySelector("#top-bar");
 
-		if(!topBar.hasClass('in')) {
+		if(! $(topBar).hasClass('in')) {
 			return 'open';
 		} else {
 			return 'closed';
