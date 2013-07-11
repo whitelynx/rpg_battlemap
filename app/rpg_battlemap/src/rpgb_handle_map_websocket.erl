@@ -1,6 +1,7 @@
 -module(rpgb_handle_map_websocket).
 -behavior(cowboy_websocket_handler).
 
+-include("log.hrl").
 -include("rpg_battlemap.hrl").
 
 -ifdef(TEST).
@@ -159,6 +160,7 @@ make_frame(Type, Id, Action, Accepted, Data) ->
 	Json2 = maybe_add_id(Id, Json1),
 	Json3 = maybe_add_accepted(Accepted, Json2),
 	Json4 = maybe_add_data(Data, Json3),
+	lager:info("Json before adding action ~p: ~p", [Action, Json4]),
 	[{<<"action">>, Action} | Json4].
 
 maybe_add_type(rpgb_rec_battlemap, Json) ->
@@ -248,18 +250,20 @@ dispatch(Req, State, From, <<"delete">>, <<"layer">>, Id, _Json) ->
 				{ok, #rpgb_rec_layer{battlemap_id = MapId} = Layer} ->
 					case rpgb_rec_layer:delete(Layer, State#state.map) of
 						{ok, Map2} ->
+							lager:info("deleted layer ~p", [Id]),
 							make_reply(From, true, undefined);
 						{error, last_layer} ->
 							make_reply(From, false, <<"cannot delete last layer">>);
 						{error, Wut} ->
-							make_reply(From, false, io_lib:format("unknown error: ~p", [Wut]))
+							make_reply(From, false, iolist_to_binary(io_lib:format("unknown error: ~p", [Wut])))
 					end;
 				{ok, _Layer} ->
 					make_reply(From, false, <<"layer not part of map">>)
 			end;
 		true ->
 			make_reply(From, false, <<"only owner can delete layers">>)
-	end;
+	end,
+	{reply, {text, Reply}, Req, State};
 
 dispatch(Req, State, From, <<"get">>, <<"layer">>, undefined, _Json) ->
 	DataReses = lists:map(fun(Id) ->
