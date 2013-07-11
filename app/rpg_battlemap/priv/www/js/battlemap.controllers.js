@@ -75,6 +75,16 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 			$scope.new_layer_name = '';
 		});
 	};
+
+	$scope.removeLayer = function(layer){
+		var defer = layer.$delete();
+		defer.then(function(success){
+			$scope.layers.splice($scope.layers.indexOf(layer), 1);
+		},
+		function(fail){
+			console.error('could not delete layer', layer, fail);
+		})
+	}
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
