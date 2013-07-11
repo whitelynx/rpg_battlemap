@@ -67,7 +67,9 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 		var defer = MapSocket.sendRequest('post', 'layer', false, {'name':layerName});
 		defer.then(function(success){
 			success = MapSocket.attach('layer', success);
+			success.visible = true;
 			$scope.layers.push(success);
+			$scope.layers.selected = success;
 			$scope.new_layer_name = '';
 		},
 		function(fail){
