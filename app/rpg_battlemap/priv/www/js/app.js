@@ -126,6 +126,7 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 			if(requests.hasOwnProperty(reply.type_id)){
 				var defer = requests[reply.type_id].defer;
 				if(reply.accepted){
+					console.log('reply thing', reply.data);
 					$rootScope.$apply(defer.resolve(reply.data));
 				} else {
 					$rootScope.$apply(defer.reject(reply.data));
@@ -184,7 +185,8 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 					}
 				}
 				console.log('put event', obj.id, ev, newObjParams);
-			})
+			});
+			return obj;
 		};
 
 		connectMap.sendRequest = sendRequest;
