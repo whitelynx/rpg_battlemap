@@ -1,7 +1,7 @@
 <a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Layers<span class="caret"> </span></a>
 
 <ul class="dropdown-menu" ng-controller="ListLayersCtrl">
-	<li>Yo.</li>
+	<li ng-repeat="layer in layers">{{ layer.name }}</li>
 </ul>
 		<!--<label for="gridLineColor">Line Color</label>
                             <input ng-model="map.gridline_color" name="gridLineColor" type="color" ng-click="stopPropagation($event)" ng-change="saveMap($event)" />
