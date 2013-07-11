@@ -53,6 +53,7 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 
 Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource, MapSocket){
 	console.log('layers list ctrl', $scope, $scope.map.id);
+
 	$scope.layers = [];
 	MapSocket.query('layer').then(function(success){
 		console.log('got layers', success);
@@ -61,6 +62,19 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 	}, function(fail){
 		console.error('could not get layers', fail);
 	});
+
+	$scope.newLayer = function(layerName){
+		var defer = MapSocket.sendRequest('post', 'layer', false, {'name':layerName});
+		defer.then(function(success){
+			success = MapSocket.attach('layer', success);
+			$scope.layers.push(success);
+			$scope.new_layer_name = '';
+		},
+		function(fail){
+			console.error('could not make new layer', fail);
+			$scope.new_layer_name = '';
+		});
+	};
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {

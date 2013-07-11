@@ -4,4 +4,10 @@
 	<li ng-repeat="layer in layers">
 		<i ng-class="{'icon-eye-open':layer.visible}"></i> {{ layer.name }}
 	</li>
+	<li class="divider"></li>
+	<li ng-show="user == map.owner">
+		<label for="layerNewName">New Layer Name</label>
+		<input ng-model="new_layer_name" ng-click="stopPropagation($event)" />
+		<button ng-click="newLayer(new_layer_name)">New</button>
+	</li>
 </ul>
