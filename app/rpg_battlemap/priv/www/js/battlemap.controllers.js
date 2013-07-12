@@ -93,8 +93,8 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope){
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
-		// the resource thing doesn't really do hateaos well, but then again
-		// neither does the browser. ah well.
+	// the resource thing doesn't really do hateaos well, but then again
+	// neither does the browser. ah well.
 	$rootScope.maps = [];
 
 	var mapsPromise = $rootScope.Map.query();
