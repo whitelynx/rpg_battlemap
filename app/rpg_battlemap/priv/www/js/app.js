@@ -203,6 +203,18 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 	.factory('LayerSocket', ['MapSocket', '$q', '$rootScope', function(MapSocket, $q, $rootScope){
 		var layers = [];
 
+		var safePush = function(newObj){
+			var foundLayers = layers.filter(function(layer){
+				return layer.id == newObj.id;
+			});
+			if(foundLayers.length > 0){
+				return foundLayers[0];
+			}
+			newObj = MapSocket.attach('layer', newObj);
+			layers.push(newObj);
+			return newObj;
+		};
+
 		var loadLayers = function(){
 			MapSocket.query('layer').then(function(success){
 				console.log('new layers', success);
@@ -221,8 +233,8 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 			var retDefer = $q.defer();
 			var localDefer = MapSocket.sendRequest('post', 'layer', false, args);
 			localDefer.then(function(success){
-				success = MapSocket.attach('layer', success);
-				layers.push(success);
+				console.log('resolving create');
+				success = safePush(success);
 				retDefer.resolve(success);
 			},
 			function(fail){
@@ -231,18 +243,11 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 			return retDefer.promise;
 		}
 
-		$rootScope.$on('layer_put', function(ev, obj){
-			var foundLayers = layers.filter(function(layer){
-				return layer.id == obj.id;
-			});
-			if(foundLayers.length > 0){
-				return;
-			}
-			obj = MapSocket.attach('layer', obj);
-			layers.push(obj);
+		$rootScope.$on('put_layer', function(ev, obj){
+			safePush(obj);
 		});
 
-		$rootScope.$on('layer_delete', function(ev, id){
+		$rootScope.$on('delete_layer', function(ev, id){
 			console.log('got layer delete', id);
 			var found = layers.filter(function(layer){
 				return layer.id == id;

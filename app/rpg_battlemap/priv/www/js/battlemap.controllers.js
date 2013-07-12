@@ -57,10 +57,10 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 	$scope.layers = LayerSocket.layers;
 	$scope.selected = $scope.layers[0];
 
-	$scope.$watch(LayerSocket.layers, function(){
+	/*$scope.$watch(LayerSocket.layers, function(){
 		console.log('watch triggers on layers change', LayerSocket.layers);
 		$scope.layers = LayerSocket.layers;
-	});
+	});*/
 
 	$scope.newLayer = function(layerName){
 		var defer = LayerSocket.create({'name':layerName});
@@ -86,7 +86,7 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 	}
 
 	$scope.selectLayer = function(layer){
-		$scope.layers.selected = layer;
+		$scope.selected = layer;
 	}
 });
 
