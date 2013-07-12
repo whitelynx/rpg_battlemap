@@ -238,36 +238,34 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 	var docElem = $(window);
 
 	function calcGridheight(buffer) {
-		buffer = buffer || 0;
-		var height = docElem.height() - buffer;
+		buffer = buffer || header.height();
+		//buffer = buffer || 0;
+		var height = docElem.height() - buffer - 25;
 		return height;
 	}
 
 	// Catch window resize events
 	docElem.bind('resize', function(){
 		$scope.$apply(function(){
-			var buffer = header.height() + 15;
-			$scope.gridHeight = calcGridheight(buffer);
+			$scope.gridHeight = calcGridheight();
 		});
 	});
 
 	// Catch header shown events.
 	topBar.on('hidden', function(){
 		$scope.$apply(function(){
-			var buffer = header.height() + 15;
-			$scope.gridHeight = calcGridheight(buffer);
+			$scope.gridHeight = calcGridheight();
 		});
 	});
 
 	// Catch header shown events.
 	topBar.on('shown', function(){
 		$scope.$apply(function(){
-			var buffer = header.height() + 15;
-			$scope.gridHeight = calcGridheight(buffer);
+			$scope.gridHeight = calcGridheight();
 		});
 	});
 
-	$scope.gridHeight = calcGridheight(header.height() + 15);
+	$scope.gridHeight = calcGridheight(82);
 
 	$scope.translate = {x: 0, y: 0};
 	$scope.scale = 1;
