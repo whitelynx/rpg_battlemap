@@ -60,6 +60,7 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 		console.log('layers length watch', newVal, oldVal);
 		if(newVal > 0 && oldVal == 0){
 			$scope.layers[0].visible = true;
+			$scope.selected = $scope.layers[0];
 		}
 	});
 
