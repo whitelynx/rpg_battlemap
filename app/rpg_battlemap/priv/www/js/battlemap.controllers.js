@@ -90,6 +90,10 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope){
 	$scope.selectLayer = function(layer){
 		$scope.selected = layer;
 	}
+
+	$scope.isVisible = function(layer){
+		return layer.visible;
+	}
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {

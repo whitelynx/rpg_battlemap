@@ -23,7 +23,7 @@
         <!--<g ng-include="'/partials/layers_svg.html'"></g>-->
 
         <g ng-controller="ListLayersCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
-          <g ng-repeat="layer in layers"> </g>
+          <g ng-repeat="layer in layers | filter:isVisible"> </g>
         </g>
 
     </svg>
