@@ -200,79 +200,77 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		connectMap.attach = attach;
 		return connectMap;
 	}])
-	.factory('LayerSocket', ['MapSocket', '$q', '$rootScope', function(MapSocket, $q, $rootScope){
-		var layers = [];
+	.factory('SocketResource', ['MapSocket', '$q', '$rootScope', function(MapSocket, $q, $rootScope){
 
-		var safePush = function(newObj){
-			var foundLayers = layers.filter(function(layer){
-				return layer.id == newObj.id;
-			});
-			if(foundLayers.length > 0){
-				return foundLayers[0];
-			}
-			newObj = MapSocket.attach('layer', newObj);
-			layers.push(newObj);
-			return newObj;
-		};
+		return function(typeString){
+			var localArray = [];
 
-		var loadLayers = function(){
-			MapSocket.query('layer').then(function(success){
-				console.log('new layers', success);
-				layers.splice(0, layers.length);
-				success.forEach(function(e){
-					layers.push(e);
+			var safePush = function(newObj){
+				var foundObjs = localArray.filter(function(obj){
+					return obj.id == newObj.id;
 				});
-			},
-			function(fail){
-				console.error('could not load layers', fail);
-				layers.splice(0, layers.length);
-			})
-		};
+				if(foundObjs.length > 0){
+					return foundObjs[0];
+				}
+				newObj = MapSocket.attach(typeString, newObj);
+				localArray.push(newObj);
+				return newObj;
+			}
 
-		var create = function(args){
-			var retDefer = $q.defer();
-			var localDefer = MapSocket.sendRequest('post', 'layer', false, args);
-			localDefer.then(function(success){
-				console.log('resolving create');
-				success = safePush(success);
-				retDefer.resolve(success);
-			},
-			function(fail){
-				retDefer.reject(fail);
-			})
-			return retDefer.promise;
+			var loadObjects = function(){
+				MapSocket.query(typeString).then(function(success){
+					localArray.splice(0, localArray.length);
+					success.forEach(function(e){
+						localArray.push(e);
+					});
+				},
+				function(fail){
+					console.error('socket res failed to load data', typeString, fail);
+					localArray.splice(0, localArray.length)
+				})
+			};
+
+			var create = function(args){
+				var retDefer = $q.defer();
+				var localDefer = MapSocket.sendRequest('post', typeString, false, args);
+				localDefer.then(function(success){
+					success = safePush(success);
+					retDefer.resolve(success);
+				},
+				function(fail){
+					retDefer.reject(fail);
+				});
+				return retDefer.promise;
+			};
+
+			$rootScope.$on('put_' + typeString, function(ev, obj){
+				safePush(obj);
+			});
+
+			$rootScope.$on('delete_' + typeString, function(ev, id){
+				var found = localArray.filter(function(obj){
+					return obj.id == id;
+				});
+				found.forEach(function(o){
+					localArray.splice(localArray.indexOf(o), 1);
+				});
+			});
+
+			$rootScope.$on('mapsocket_closed', function(){
+				localArray.splice(0, localArray.length);
+			});
+
+			$rootScope.$on('mapsocket_open', function(){
+				loadObjects();
+			});
+
+			return {
+				'create': create,
+				'models': localArray
+			};
 		}
-
-		$rootScope.$on('put_layer', function(ev, obj){
-			safePush(obj);
-		});
-
-		$rootScope.$on('delete_layer', function(ev, id){
-			console.log('got layer delete', id);
-			var found = layers.filter(function(layer){
-				return layer.id == id;
-			});
-			found.forEach(function(l){
-				layers.splice(layers.indexOf(l), 1);
-			});
-		})
-
-		$rootScope.$on('mapsocket_closed', function(){
-			layers = layers.splice(0, layers.length);
-		});
-
-		$rootScope.$on('mapsocket_open', function(){
-			console.log('loading layers in repsonse to open socket');
-			loadLayers();
-		});
-
-		window.ll = layers;
-		return {
-			'create':create,
-			'layers':layers
-		};
 	}])
-	.run(function($rootScope, $resource){
+	.run(function($rootScope, $resource, SocketResource){
 		$rootScope.user = window.currentUser;
 		$rootScope.loginUrl = window.loginUrl;
 		$rootScope.logoutUrl = window.logoutUrl;
@@ -281,6 +279,8 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		'save': {'method':'PUT'},
 		'create':{'method':'POST', },
 		'query':{'method':'GET', 'isArray':true, 'params':{'mapid':''}}});
+
+		$rootScope.Layers = SocketResource('layer');
 
 		$rootScope.stopPropagation = function(ev){
 			ev.stopPropagation();

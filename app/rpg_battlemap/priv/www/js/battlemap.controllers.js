@@ -51,10 +51,10 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 
 });
 
-Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource, LayerSocket){
+Controllers.controller("ListLayersCtrl", function($scope, $rootScope){
 	console.log('layers list ctrl', $scope, $scope.map.id);
 
-	$scope.layers = LayerSocket.layers;
+	$scope.layers = $rootScope.Layers.models;
 
 	$scope.$watch('layers.length', function(newVal, oldVal){
 		console.log('layers length watch', newVal, oldVal);
@@ -65,7 +65,7 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 	});
 
 	$scope.newLayer = function(layerName){
-		var defer = LayerSocket.create({'name':layerName});
+		var defer = $rootScope.Layers.create({'name':layerName});
 		defer.then(function(success){
 			success.visible = true;
 			$scope.selected = success;
