@@ -122,4 +122,5 @@ maybe_broadcast(_Function, _Args, _Result) ->
 	ok.
 
 broadcast(Msg) ->
+	lager:info("broadcasting ~p", [Msg]),
 	rpgb_data_events:notify(Msg).

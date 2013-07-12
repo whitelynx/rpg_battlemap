@@ -368,11 +368,6 @@ postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, post, _La
 			rpgb_requests_tests:assert_ws_frame(ReplyFrame, reply, false, reply, ResId, <<"invalid action">>)
 	end;
 
-postcondition(State, {call, ?MODULE, websocket, [{Socket, Who, MapId}, get, undefined, _Json, _Name]}, {ResId, ReplyFrame}) ->
-	Map = lists:keyfind(MapId, #test_map.id, State#state.maps),
-	Layers = [lists:keyfind(LayerId, #test_layer.id, State#state.layers) || LayerId <- Map#test_map.layers],
-	
-
 postcondition(State, Call, Res) ->
 	?debugFmt("Fall through postcondition:~n"
 		"    State: ~p~n"

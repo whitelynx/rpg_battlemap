@@ -50,6 +50,8 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				console.log('resolving connection', $rootScope);
 				connectingResolved = true;
 				$rootScope.$apply(connectingDefer.resolve(ev));
+				console.log('emiting open socket');
+				$rootScope.$apply($rootScope.$emit('mapsocket_open'));
 			};
 
 			ws.onmessage = function(ev){
@@ -64,6 +66,7 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				connectinDefer = false;
 				connectingResolved = true;
 				console.log('connection closing', connectingDefer);
+				$rootScope.$apply($rootScope.$emit('mapsocket_closed'));
 			}
 
 			return connectingDefer.promise;
@@ -111,11 +114,9 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				return;
 			}
 			var eventName = messageObj.action + '_' + messageObj.type;
-			if(messageObj.hasOwnProperty('type_id') && messageObj.action != 'delete'){
-				eventName += '_' + messageObj.type_id;
-			}
 			var emitData = messageObj.action == 'delete' ? messageObj.type_id : messageObj.data;
-			$rootScope.$apply($rootScope.$emit(eventName, emitData));
+			console.log('emitting', eventName);
+			$rootScope.$emit(eventName, emitData);
 		};
 
 		var maybeReply = function(reply){
@@ -127,9 +128,9 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				var defer = requests[reply.type_id].defer;
 				if(reply.accepted){
 					console.log('reply thing', reply.data);
-					$rootScope.$apply(defer.resolve(reply.data));
+					defer.resolve(reply.data);
 				} else {
-					$rootScope.$apply(defer.reject(reply.data));
+					defer.reject(reply.data);
 				}
 				delete requests[reply.type_id];
 			}
@@ -176,8 +177,12 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 			obj.$delete = function(){
 				return sendRequest('delete', type, this.id);
 			};
-			var eventName = 'put_' + type + '_' + obj.id;
+			var eventName = 'put_' + type
 			$rootScope.$on(eventName, function(ev, newObjParams){
+				if(newObjParams.id != obj.id){
+					return obj;
+				}
+
 				var k;
 				for(k in newObjParams){
 					if(newObjParams.hasOwnProperty(k)){
@@ -194,6 +199,73 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		connectMap.get = get;
 		connectMap.attach = attach;
 		return connectMap;
+	}])
+	.factory('LayerSocket', ['MapSocket', '$q', '$rootScope', function(MapSocket, $q, $rootScope){
+		var layers = [];
+
+		var loadLayers = function(){
+			MapSocket.query('layer').then(function(success){
+				console.log('new layers', success);
+				layers.splice(0, layers.length);
+				success.forEach(function(e){
+					layers.push(e);
+				});
+			},
+			function(fail){
+				console.error('could not load layers', fail);
+				layers.splice(0, layers.length);
+			})
+		};
+
+		var create = function(args){
+			var retDefer = $q.defer();
+			var localDefer = MapSocket.sendRequest('post', 'layer', false, args);
+			localDefer.then(function(success){
+				success = MapSocket.attach('layer', success);
+				layers.push(success);
+				retDefer.resolve(success);
+			},
+			function(fail){
+				retDefer.reject(fail);
+			})
+			return retDefer.promise;
+		}
+
+		$rootScope.$on('layer_put', function(ev, obj){
+			var foundLayers = layers.filter(function(layer){
+				return layer.id == obj.id;
+			});
+			if(foundLayers.length > 0){
+				return;
+			}
+			obj = MapSocket.attach('layer', obj);
+			layers.push(obj);
+		});
+
+		$rootScope.$on('layer_delete', function(ev, id){
+			console.log('got layer delete', id);
+			var found = layers.filter(function(layer){
+				return layer.id == id;
+			});
+			found.forEach(function(l){
+				layers.splice(layers.indexOf(l), 1);
+			});
+		})
+
+		$rootScope.$on('mapsocket_closed', function(){
+			layers = layers.splice(0, layers.length);
+		});
+
+		$rootScope.$on('mapsocket_open', function(){
+			console.log('loading layers in repsonse to open socket');
+			loadLayers();
+		});
+
+		window.ll = layers;
+		return {
+			'create':create,
+			'layers':layers
+		};
 	}])
 	.run(function($rootScope, $resource){
 		$rootScope.user = window.currentUser;

@@ -51,25 +51,22 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 
 });
 
-Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource, MapSocket){
+Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource, LayerSocket){
 	console.log('layers list ctrl', $scope, $scope.map.id);
 
-	$scope.layers = [];
-	MapSocket.query('layer').then(function(success){
-		console.log('got layers', success);
-		$scope.layers = success;
-		$scope.layers[0].visible = true;
-	}, function(fail){
-		console.error('could not get layers', fail);
+	$scope.layers = LayerSocket.layers;
+	$scope.selected = $scope.layers[0];
+
+	$scope.$watch(LayerSocket.layers, function(){
+		console.log('watch triggers on layers change', LayerSocket.layers);
+		$scope.layers = LayerSocket.layers;
 	});
 
 	$scope.newLayer = function(layerName){
-		var defer = MapSocket.sendRequest('post', 'layer', false, {'name':layerName});
+		var defer = LayerSocket.create({'name':layerName});
 		defer.then(function(success){
-			success = MapSocket.attach('layer', success);
 			success.visible = true;
-			$scope.layers.push(success);
-			$scope.layers.selected = success;
+			$scope.selected = success;
 			$scope.new_layer_name = '';
 		},
 		function(fail){
@@ -81,15 +78,14 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 	$scope.removeLayer = function(layer){
 		var defer = layer.$delete();
 		defer.then(function(success){
-			$scope.layers.splice($scope.layers.indexOf(layer), 1);
+			return true;
 		},
 		function(fail){
 			console.error('could not delete layer', layer, fail);
-		})
+		});
 	}
 
 	$scope.selectLayer = function(layer){
-		console.log('yo');
 		$scope.layers.selected = layer;
 	}
 });

@@ -73,6 +73,7 @@ handle_event({delete, rpgb_rec_layer, LayerId} = Msg, State) ->
 	Layers = State#state.layers,
 	case lists:delete(LayerId, Layers) of
 		Layers ->
+			lager:info("ignoring delete request of layer ~p", [LayerId]),
 			{ok, State};
 		Layers1 ->
 			tell_consumers(State#state.consumers, Msg),
@@ -80,7 +81,7 @@ handle_event({delete, rpgb_rec_layer, LayerId} = Msg, State) ->
 	end;
 
 handle_event({_NotDelete, #rpgb_rec_layer{battlemap_id = MapId} = Layer} = Msg, #state{map_id = MapId} = State) ->
-	Layers = lists:keystore(Layer#rpgb_rec_layer.id, #rpgb_rec_layer.id, State#state.layers, Layer),
+	Layers = ordsets:add_element(Layer#rpgb_rec_layer.id, State#state.layers),
 	tell_consumers(State#state.consumers, Msg),
 	{ok, State#state{layers = Layers}};
 
@@ -89,6 +90,7 @@ handle_event({_NotDelete, #rpgb_rec_layer{battlemap_id = MapId} = Layer} = Msg, 
 
 handle_event(Event, State) ->
 	?debug("ignored event ~p", [Event]),
+	lager:info("ignored event ~p", [Event]),
 	{ok, State}.
 
 % handle_call
@@ -116,10 +118,12 @@ handle_info({'DOWN', _Mon, process, Pid, _Why}, State) ->
 
 handle_info(Msg, State) ->
 	?debug("Some info: ~p", [Msg]),
+	lager:info("unahndled info: ~p", [Msg]),
 	{ok, State}.
 
 % terminate
 terminate(Why, State) ->
+	lager:info("exiting due to ~p", [Why]),
 	tell_consumers(State#state.consumers, {exit, Why}),
 	ok.
 

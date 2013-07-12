@@ -77,6 +77,7 @@ websocket_info({map_event, {new, Record}}, Req, State) ->
 
 websocket_info({map_event, {delete, Type, Id}}, Req, State) ->
 	?debugMsg("map delete event"),
+	lager:info("delete event of ~p ~p", [Type, Id]),
 	Frame = make_frame(Type, Id, <<"delete">>, undefined, undefined),
 	{reply, {text, jsx:to_json(Frame)}, Req, State};
 
@@ -85,6 +86,7 @@ websocket_info({send, Msg}, Req, State) ->
 	{reply, {text, Msg}, Req, State};
 websocket_info(Info, Req, State) ->
 	?debugFmt("Some other info: ~p", [Info]),
+	lager:warning("unhandled info ~p", [Info]),
 	{ok, Req, State}.
 
 websocket_terminate(_Reason, _Req, State) ->
@@ -160,7 +162,6 @@ make_frame(Type, Id, Action, Accepted, Data) ->
 	Json2 = maybe_add_id(Id, Json1),
 	Json3 = maybe_add_accepted(Accepted, Json2),
 	Json4 = maybe_add_data(Data, Json3),
-	lager:info("Json before adding action ~p: ~p", [Action, Json4]),
 	[{<<"action">>, Action} | Json4].
 
 maybe_add_type(rpgb_rec_battlemap, Json) ->

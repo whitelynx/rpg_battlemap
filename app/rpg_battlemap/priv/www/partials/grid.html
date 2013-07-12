@@ -1,4 +1,7 @@
 <section class="grid" ng-controller="GridCtrl">
+    <div ng-controller="ListLayersCtrl">
+      <span ng-repeat="layer in layers">{{layer.name}}</span>
+    </div>
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" ng-style="mapBackgroundCssObject()" height="{{ gridHeight }}" width="100%" ng-mousedown="startPan($event)" ng-mouseup="stopPan($event)" ng-mousemove="pan($event)" ng-mouseleave="stopPan($event)" ng-mousewheel="zoom($event);" msd-wheel="zoom($event);">
         <defs>
             <pattern x="0" y="0" width="32" height="32" id="gridPattern"
@@ -18,5 +21,16 @@
 
         <rect x="0" y="0" width="100%" height="100%" stroke-opacity="0"
               fill="url(#gridPattern)" style="pointer-events:none;" id="gridRect"/>
+
+
+        <text x="10" y="10" font-size="12">{{translate.x}}</text>
+        <g>
+          <text x="10" y="10" font-size="12">{{scale}}</text>
+        </g>
+        <g ng-controller="ListLayersCtrl">
+          <g ng-repeat="layer in layers"><text x="40" y="40" font-size="12">{{layer.name}}</text></g>
+        </g>
+
+        <!--<g ng-include="'/partials/layers_svg.html'"></g>-->
     </svg>
 </section>
