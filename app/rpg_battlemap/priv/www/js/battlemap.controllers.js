@@ -55,12 +55,13 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope, $resource,
 	console.log('layers list ctrl', $scope, $scope.map.id);
 
 	$scope.layers = LayerSocket.layers;
-	$scope.selected = $scope.layers[0];
 
-	/*$scope.$watch(LayerSocket.layers, function(){
-		console.log('watch triggers on layers change', LayerSocket.layers);
-		$scope.layers = LayerSocket.layers;
-	});*/
+	$scope.$watch('layers.length', function(newVal, oldVal){
+		console.log('layers length watch', newVal, oldVal);
+		if(newVal > 0 && oldVal == 0){
+			$scope.layers[0].visible = true;
+		}
+	});
 
 	$scope.newLayer = function(layerName){
 		var defer = LayerSocket.create({'name':layerName});
