@@ -172,38 +172,6 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 		console.error('some error', error);
 	});
 
-	$scope.currentTool = Tool.currentTool;
-
-	var dragData = {};
-	var panTool = {
-		grid_mousedown: function(origin, ev){
-			dragData.lastX = ev.pageX;
-			dragData.lastY = ev.pageY;
-			dragData.panning = true;
-		},
-		grid_mouseup: function(origin, ev){
-			dragData.panning = false;
-		},
-		grid_mousemove: function(origin, ev){
-			if(! dragData.panning){
-				return;
-			}
-			var deltaX = ev.pageX - dragData.lastX;
-			var deltaY = ev.pageY - dragData.lastY;
-			dragData.lastX = event.pageX;
-			dragData.lastY = event.pageY;
-			$scope.translate.x = $scope.translate.x + deltaX;
-			$scope.translate.y = $scope.translate.y + deltaY;
-		}
-	};
-
-	$scope.setTool = function(tool){
-		switch(tool.name){
-			default:
-				Tool('Pan Map', panTool);
-		}
-	};
-
 	$scope.saveMap = function(ev){
 		console.log('saving map', $scope.map);
 		$scope.map.$save();
@@ -223,6 +191,93 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 		var out = {'backgroundColor': $scope.map.background_color};
 		return out;
 	}
+});
+
+Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
+	$scope.currentTool = Tool.currentTool;
+
+	var makePanTool = function(def){
+		var dragData = {};
+		def.name = 'Pan Map';
+		def.grid_mousedown = function(origin, ev){
+			dragData.lastX = ev.pageX;
+			dragData.lastY = ev.pageY;
+			dragData.panning = true;
+		};
+		def.grid_mouseup = function(origin, ev){
+			dragData.panning = false;
+		};
+		def.grid_mousemove = function(origin, ev){
+			if(! dragData.panning){
+				return;
+			}
+			var deltaX = ev.pageX - dragData.lastX;
+			var deltaY = ev.pageY - dragData.lastY;
+			dragData.lastX = event.pageX;
+			dragData.lastY = event.pageY;
+			$scope.translate.x = $scope.translate.x + deltaX;
+			$scope.translate.y = $scope.translate.y + deltaY;
+		};
+		def.deselected = function(){
+			dragData.panning = false;
+		}
+		return def;
+	};
+
+	var makeMeasureTool = function(def){
+		def.start = {};
+		def.stop = {};
+		def.measuring = false;
+		def.name = 'Measure';
+		def.normalize = function(n){
+			return Math.floor(n) + 0.5;
+		};
+		def.distance = function(){
+			var deltaX = Math.abs(this.start.x - this.stop.x);
+			var deltaY = Math.abs(this.start.y - this.stop.y);
+			var out = deltaX > deltaY ? deltaX : deltaY;
+			return out;
+		};
+		def.deselected = function(){
+			this.measuring = false;
+		};
+		def.grid_mousedown = function(origin, ev, cellX, cellY){
+			if(this.measuring){
+				this.measuring = false;
+				return;
+			}
+			this.measuring = true;
+			var normalX = this.normalize(cellX);
+			var normalY = this.normalize(cellY);
+			this.start = {x: normalX, y: normalY};
+		};
+		def.grid_mousemove = function(origin, ev, cellX, cellY){
+			if(this.measuring){
+				var normalX = this.normalize(cellX);
+				var normalY = this.normalize(cellY);
+				stop = {
+					x: normalX,
+					y: normalY
+				};
+			}
+		};
+		return def;
+	};
+
+	$scope.setTool = function(tool){
+		switch(tool){
+
+			case 'measure':
+				Tool(makeMeasureTool);
+				break;
+
+			default:
+				Tool(makePanTool);
+		}
+	};
+
+	$scope.setTool('Normal');
+
 });
 
 Controllers.controller("EditMapCtrl", function($scope, $rootScope) {

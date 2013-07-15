@@ -292,21 +292,11 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 
 		var currentTool = defaultTool;
 
-		var setTool = function(toolName, toolOpts){
-			var toolFunctionNames = ['selected', 'deselected', 'grid_mousemove',
-				'grid_mouseup', 'grid_mousedown', 'name'];
-			var outTool = Object.create(defaultTool);
-			toolFunctionNames.forEach(function(funcName){
-				if(toolOpts[funcName]){
-					outTool[funcName] = toolOpts[funcName]
-				}
-			});
-			outTool.name = toolName;
-			currentTool.deselected();
-			currentTool = outTool;
-			currentTool.selected();
+		var setTool = function(makeFunc){
+			var newTool = Object.create(defaultTool);
+			currentTool = makeFunc(newTool);
 			return currentTool;
-		}
+		};
 
 		setTool.currentTool = currentTool;
 
