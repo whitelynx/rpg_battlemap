@@ -1,7 +1,7 @@
 <div class="btn-toolbar pull-right">
 
 	<div class="btn-group" data-toggle="buttons-radio">
-		<button class="btn btn-small" title="{{ tool.name }}" ng-repeat="tool in tools"><i class="{{ tool.icon }}"></i></button>
+		<button class="btn btn-small" title="{{ tool.name }}" ng-click="setTool({{tool}})" ng-repeat="tool in tools"><i class="{{ tool.icon }}"></i></button>
 	</div>
 
 	<button class="btn btn-small" title="Collapse controls" data-toggle="collapse" data-target="#top-bar" ng-click="handleToggle()">

@@ -141,7 +141,7 @@ Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 
 });
 
-Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope, $resource, MapSocket) {
+Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope, $resource, MapSocket, Tool) {
 	$scope.map = {};
 
 	$scope.noToolbar = false;
@@ -171,6 +171,38 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 	function(error){
 		console.error('some error', error);
 	});
+
+	$scope.currentTool = Tool.currentTool;
+
+	var dragData = {};
+	var panTool = {
+		grid_mousedown: function(origin, ev){
+			dragData.lastX = ev.pageX;
+			dragData.lastY = ev.pageY;
+			dragData.panning = true;
+		},
+		grid_mouseup: function(origin, ev){
+			dragData.panning = false;
+		},
+		grid_mousemove: function(origin, ev){
+			if(! dragData.panning){
+				return;
+			}
+			var deltaX = ev.pageX - dragData.lastX;
+			var deltaY = ev.pageY - dragData.lastY;
+			dragData.lastX = event.pageX;
+			dragData.lastY = event.pageY;
+			$scope.translate.x = $scope.translate.x + deltaX;
+			$scope.translate.y = $scope.translate.y + deltaY;
+		}
+	};
+
+	$scope.setTool = function(tool){
+		switch(tool.name){
+			default:
+				Tool('Pan Map', panTool);
+		}
+	};
 
 	$scope.saveMap = function(ev){
 		console.log('saving map', $scope.map);
@@ -240,6 +272,7 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 	var header = $("#main-header");
 	var topBar = $("#top-bar");
 	var docElem = $(window);
+	var CELL_SIZE = 32;
 
 	function calcGridheight(buffer) {
 		buffer = buffer || header.height();
@@ -271,33 +304,37 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 
 	$scope.gridHeight = calcGridheight(82);
 
-	$scope.translate = {x: 0, y: 0};
-	$scope.scale = 1;
+	$rootScope.translate = {x: 0, y: 0};
+	$rootScope.scale = 1;
 
 	var dragData = {
 		panning: false
 	};
 
-	$scope.startPan = function(ev){
-		console.log('starting pan', ev);
-		dragData.lastX = ev.pageX;
-		dragData.lastY = ev.pageY;
-		dragData.panning = true;
+	var dimensionToCell = function(d, pan){
+		return ( (d - pan) / $scope.scale) / CELL_SIZE;
 	};
-	$scope.stopPan = function(ev){
-		dragData.panning = false;
+
+	var pixelsToCells = function(pixelX, pixelY){
+		var cellX = dimensionToCell(pixelX, $scope.translate.x);
+		var cellY = dimensionToCell(pixelY, $scope.translate.y);
+		return [cellX, cellY];
 	};
-	$scope.pan = function(ev){
-		if(! dragData.panning){
-			return;
-		}
-		var deltaX = ev.pageX - dragData.lastX;
-		var deltaY = ev.pageY - dragData.lastY;
-		dragData.lastX = event.pageX;
-		dragData.lastY = event.pageY;
-		$scope.translate.x = $scope.translate.x + deltaX;
-		$scope.translate.y = $scope.translate.y + deltaY;
-	}
+
+	$scope.mouseDown = function(ev){
+		xy = pixelsToCells(ev.layerX, ev.layerY),
+		$rootScope.$broadcast('grid_mousedown', ev, xy[0], xy[1]);
+	};
+
+	$scope.mouseUp = function(ev){
+		xy = pixelsToCells(ev.layerX, ev.layerY);
+		$rootScope.$broadcast('grid_mouseup', ev, xy[0], xy[1]);
+	};
+
+	$scope.mouseMove = function(ev){
+		xy = pixelsToCells(ev.layerX, ev.layerY);
+		$rootScope.$broadcast('grid_mousemove', ev, xy[0], xy[1]);
+	};
 
 	$scope.zoom = function(ev){
 		//console.log('der zoom', ev, arguments);

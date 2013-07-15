@@ -269,6 +269,60 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				'models': localArray
 			};
 		}
+	}]).
+	factory('Tool', ['$rootScope', function($rootScope){
+		var defaultTool = {
+			name: 'default',
+			selected: function(){
+				return true;
+			},
+			deselected: function(){
+				return true;
+			},
+			grid_mousedown: function(origin, ev, cellx, celly){
+				return true;
+			},
+			grid_mouseup: function(origin, ev, cellx, celly){
+				return true;
+			},
+			grid_mousemove: function(origin, ev, cellx, celly){
+				return true;
+			}
+		};
+
+		var currentTool = defaultTool;
+
+		var setTool = function(toolName, toolOpts){
+			var toolFunctionNames = ['selected', 'deselected', 'grid_mousemove',
+				'grid_mouseup', 'grid_mousedown', 'name'];
+			var outTool = Object.create(defaultTool);
+			toolFunctionNames.forEach(function(funcName){
+				if(toolOpts[funcName]){
+					outTool[funcName] = toolOpts[funcName]
+				}
+			});
+			outTool.name = toolName;
+			currentTool.deselected();
+			currentTool = outTool;
+			currentTool.selected();
+			return currentTool;
+		}
+
+		setTool.currentTool = currentTool;
+
+		$rootScope.$on('grid_mousedown', function(){
+			currentTool.grid_mousedown.apply(currentTool, arguments);
+		});
+
+		$rootScope.$on('grid_mousemove', function(){
+			currentTool.grid_mousemove.apply(currentTool, arguments);
+		});
+
+		$rootScope.$on('grid_mouseup', function(){
+			currentTool.grid_mouseup.apply(currentTool, arguments);
+		});
+
+		return setTool;
 	}])
 	.run(function($rootScope, $resource, SocketResource){
 		$rootScope.user = window.currentUser;
