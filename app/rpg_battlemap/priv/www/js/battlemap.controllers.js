@@ -230,7 +230,7 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 		def.measuring = false;
 		def.name = 'Measure';
 		def.normalize = function(n){
-			return Math.floor(n) + 0.5;
+			return Math.floor(n);
 		};
 		def.distance = function(){
 			var deltaX = Math.abs(this.start.x - this.stop.x);
@@ -250,15 +250,14 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 			var normalX = this.normalize(cellX);
 			var normalY = this.normalize(cellY);
 			this.start = {x: normalX, y: normalY};
+			this.stop = {x: normalX, y: normalY};
 		};
 		def.grid_mousemove = function(origin, ev, cellX, cellY){
 			if(this.measuring){
 				var normalX = this.normalize(cellX);
 				var normalY = this.normalize(cellY);
-				stop = {
-					x: normalX,
-					y: normalY
-				};
+				this.stop.x = normalX;
+				this.stop.y = normalY;
 			}
 		};
 		return def;
@@ -278,6 +277,39 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 
 	$scope.setTool('Normal');
 
+});
+
+Controllers.controller("MeasureToolCtrl", function($scope, $rootScope, Tool){
+
+	$rootScope.$on('grid_toolchange', function(ev, newTool){
+		$scope.toolData = newTool;
+	});
+
+	$scope.mid = function(prop){
+		var n1 = $scope.toolData.start[prop];
+		var n2 = $scope.toolData.stop[prop];
+		return (n1 + n2) / 2;
+	};
+
+	$scope.midx = function(){
+		return $scope.mid('x');
+	};
+
+	$scope.midy = function(){
+		return $scope.mid('y');
+	};
+
+	$scope.transform = function(n, trans){
+		return (n + trans) * $scope.scale;
+	};
+
+	$scope.transformX = function(n){
+		return $scope.transform(n, $scope.translate.x);
+	};
+
+	$scope.transformY = function(n){
+		return $scope.transform(n, $scope.translate.y);
+	};
 });
 
 Controllers.controller("EditMapCtrl", function($scope, $rootScope) {

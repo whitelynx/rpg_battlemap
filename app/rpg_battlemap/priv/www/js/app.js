@@ -294,7 +294,11 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 
 		var setTool = function(makeFunc){
 			var newTool = Object.create(defaultTool);
-			currentTool = makeFunc(newTool);
+			currentTool.deselected();
+			updateTool = makeFunc(newTool);
+			updateTool.selected();
+			$rootScope.$broadcast('grid_toolchange', updateTool, currentTool);
+			currentTool = updateTool;
 			return currentTool;
 		};
 
