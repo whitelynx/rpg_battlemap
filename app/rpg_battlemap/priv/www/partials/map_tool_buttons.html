@@ -1,15 +1,36 @@
 
 <div class="btn-group" ng-controller="AddCombatantToolCtrl">
-	<button class="btn btn-small" ng-class="{'active':toolName == 'Add Combatant'}">{{ name }}</button>
-	<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+	<button class="btn btn-small" ng-class="{'active':toolName == 'Add Combatant'}" ng-click="setTool()">{{ name_base }}</button>
+	<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" ng-click="setTool()">
 		<span class="caret"></span>
 	</button>
 	<ul class="dropdown-menu">
-		<li><a tabindex="-1" href="#">Action</a></li>
-		<li><a tabindex="-1" href="#">Another action</a></li>
-		<li><a tabindex="-1" href="#">Something else here</a></li>
-		<li class="divider"></li>
-		<li><a tabindex="-1" href="#">Separated link</a></li>
+
+		<li>
+			<label for="newCombatantName">Name</label>
+			<input ng-model="name_base" name="newCombatantName" ng-click="stopPropagation($event)" />
+		</li>
+
+		<li>
+			<label for="newCombatantSize">Size</label>
+			<input ng-model="size" name="newCombatantSize" ng-click="stopPropagation($event)" type="number" step="1" min="1" max="10" />
+		</li>
+
+		<li>
+			<label for="newCombatantColor">Color</label>
+			<input ng-model="color" name="newCombatantColor" ng-click="stopPropagation($event)" type="color" />
+		</li>
+
+		<li>
+			<label for="newCombatantAuraSize">Aura Size</label>
+			<input ng-model="aura_size" name="newCombatantAuraSize" ng-click="stopPropagation($event)" type="number" step="1" min="0" max="20" />
+		</li>
+
+		<li>
+			<label for="newCombatantAuraColor">Aura Color</label>
+			<input ng-model="aura_color" name="newCombatantAuraColor" ng-click="stopPropagation($event)" type="color" />
+		</li>
+
 	</ul>
 </div>
 
