@@ -182,11 +182,6 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 		{ name: 'Zones & Auras', menu: [] },
 	];
 
-	$scope.tools = [
-		{ name: 'Normal', icon: 'icon-hand-up' },
-		{ name: 'Measure', icon: 'icon-map-marker' }
-	];
-
 	$scope.mapBackgroundCssObject = function(){
 		var out = {'backgroundColor': $scope.map.background_color};
 		return out;
