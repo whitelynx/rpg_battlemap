@@ -88,7 +88,7 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope){
 	}
 
 	$scope.selectLayer = function(layer){
-		$scope.selected = layer;
+		$scope.layers.selected = layer;
 	}
 
 	$scope.isVisible = function(layer){
@@ -133,6 +133,11 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 		function(fail){
 			console.error('could not delete combatant', fail, combatant);
 		})
+	};
+
+	$scope.isOnLayer = function(combatant, layer){
+		console.log('isOnLayer', combatant, layer, this);
+		return false;
 	};
 
 });
@@ -246,6 +251,19 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 			var x = Math.floor(cellX);
 			var y = Math.floor(cellY);
 
+			var layerId = null;
+			if($rootScope.Layers.models.selected){
+				layerId = $rootScope.Layers.models.selected.id;
+			} else {
+				layerId = $rootScope.Layers.models.reduceRight(function(red, layer){
+					if(layer.visible){
+						return red || layer.id;
+					}
+				}, layerId)
+			}
+
+			console.log('layer id', layerId);
+
 			var combatant = {
 				'x': x,
 				'y': y,
@@ -253,7 +271,8 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 				'size': $scope.size,
 				'color': $scope.color,
 				'aura_size': $scope.aura_size,
-				'aura_color': $scope.aura_color
+				'aura_color': $scope.aura_color,
+				'layer_id': layerId
 			};
 
 			var defer = $rootScope.Combatants.create(combatant);

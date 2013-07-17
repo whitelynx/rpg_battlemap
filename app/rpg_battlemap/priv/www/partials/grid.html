@@ -24,13 +24,22 @@
 
         <g ng-controller="ListLayersCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
           <g ng-repeat="layer in layers | filter:isVisible">
-            <text x="10" y="10">{{layer.id}}</text>
+            <text x="10" y="10">{{layer.name}}: {{layer.id}}</text>
             <g ng-controller="ListCombatantsCtrl">
 
-              <g ng-repeat="combatant in combatants | filter:function(c){ return c.layer_id == layer.id; }">
+              <g ng-repeat="combatant in combatants | filter:combatant.layer_id == layer.id ">
 
-                <text x="20" y="30">{{combatant.name}}</text>
-                <text x="20" y="45">LayerId: {{combatant.layer_id}}</text>
+                <rect
+                  x="{{combatant.x * 32}}"
+                  y="{{combatant.y * 32}}"
+                  width="{{combatant.size * 32}}"
+                  height="{{combatant.size * 32}}"
+                  fill="{{combatant.color}}"
+                  rx="16"
+                  ry="16"
+                />
+                <text x="{{combatant.x * 32}}" y="{{combatant.y * 32}}">{{combatant.name}}</text>
+                <text x="{{combatant.x * 32}}" y="{{combatant.y * 32 + 15}}">LayerId: {{combatant.layer_id}}</text>
 
               </g>
 

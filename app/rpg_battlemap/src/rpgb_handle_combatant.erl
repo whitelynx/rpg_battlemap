@@ -148,7 +148,10 @@ from_json(Req, #ctx{combatantid = mapcombatants} = Ctx) ->
 	User = rpgb_session:get_user(Session),
 	{ok, Body, Req1} = cowboy_req:body(Req),
 	Term = jsx:to_term(Body),
-	case rpgb_rec_combatant:validate(Term) of
+	BaseRec = #rpgb_rec_combatant{
+		battlemap_id = MapId
+	},
+	case rpgb_rec_combatant:validate(Term, BaseRec) of
 		{ok, {Json, Rec}} ->
 			Rec1 = #rpgb_rec_combatant{battlemap_id = MapId, owner_id = User:id(),
 				created = os:timestamp(), updated = os:timestamp()},

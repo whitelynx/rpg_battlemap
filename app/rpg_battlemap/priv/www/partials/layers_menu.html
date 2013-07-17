@@ -3,7 +3,7 @@
 <ul class="dropdown-menu" ng-controller="ListLayersCtrl">
 
 	<li ng-repeat="layer in layers" style="clear:both;">
-		<p ng-click="selectLayer(layer)" ng-class="{'selected':selected == layer}">
+		<p ng-click="selectLayer(layer)" ng-class="{'selected':layers.selected == layer}">
 			<i class="icon-fixed-width icon-border" ng-class="{'icon-eye-open':layer.visible}" ng-click="layer.visible = ! layer.visible"></i>
 			{{ layer.name }}
 			<button ng-hide="layers.length < 2" ng-click="removeLayer(layer)" class="pull-right">

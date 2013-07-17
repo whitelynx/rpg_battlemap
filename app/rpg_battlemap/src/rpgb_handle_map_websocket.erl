@@ -407,7 +407,8 @@ dispatch(Req, State, From, <<"put">>, <<"combatant">>, Id, Json) ->
 	end;
 
 dispatch(Req, State, From, <<"post">>, <<"combatant">>, undefined, Json) ->
-	case rpgb_rec_combatant:validate(Json) of
+	BaseRec = #rpgb_rec_combatant{battlemap_id = State#state.map#rpgb_rec_battlemap.id},
+	case rpgb_rec_combatant:validate(Json, BaseRec) of
 		{ok, {_Json2, Rec}} ->
 			Rec2 = Rec#rpgb_rec_combatant{
 				battlemap_id = State#state.map#rpgb_rec_battlemap.id,

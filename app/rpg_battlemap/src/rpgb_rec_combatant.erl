@@ -5,7 +5,7 @@
 -include("rpg_battlemap.hrl").
 
 -export([make_json/1]).
--export([delete/1, delete/2, validate/1, validate/2]).
+-export([delete/1, delete/2, validate/2]).
 -export([append/1, append/2]).
 
 make_json(Combatant) ->
@@ -65,9 +65,6 @@ append(#rpgb_rec_combatant{battlemap_id = MapId} = Combatant, #rpgb_rec_battlema
 
 append(C, M) ->
 	{error, {lolwut, C, M}}.
-
-validate(Json) ->
-	validate(Json, #rpgb_rec_combatant{}).
 
 validate(Json, Rec) ->
 	ValidateFuns = [
