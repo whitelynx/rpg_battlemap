@@ -109,8 +109,11 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 		});
 	};
 
-	$scope.selectCombatant = function(combatant){
+	$scope.selectCombatant = function(combatant, ev){
 		$scope.combatants.selected = combatant;
+		if(ev){
+			ev.combatant = combatant;
+		}
 	};
 
 	$scope.saveCombatant = function(ev, combatant){
@@ -318,16 +321,32 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 	var makePanTool = function(def){
 		var dragData = {};
 		def.name = 'Pan Map';
-		def.grid_mousedown = function(origin, ev){
+		def.grid_mousedown = function(origin, ev, cellX, cellY){
+			if(ev.combatant){
+				dragData.lastX = ev.combatant.x - Math.floor(cellX);
+				dragData.lastY = ev.combatant.y - Math.floor(cellY);
+				dragData.combatant = ev.combatant;
+				dragData.panning = true;
+				return;
+			}
 			dragData.lastX = ev.pageX;
 			dragData.lastY = ev.pageY;
 			dragData.panning = true;
+			dragData.combatant = false;
+			console.log('pan map mousedown', ev.combatant, origin, ev);
 		};
 		def.grid_mouseup = function(origin, ev){
 			dragData.panning = false;
+			dragData.combatant = false;
 		};
-		def.grid_mousemove = function(origin, ev){
+		def.grid_mousemove = function(origin, ev, cellX, cellY){
 			if(! dragData.panning){
+				return;
+			}
+			if(dragData.combatant){
+				dragData.combatant.x = Math.floor(cellX) + dragData.lastX;
+				dragData.combatant.y = Math.floor(cellY) + dragData.lastY;
+				dragData.combatant.$save();
 				return;
 			}
 			var deltaX = ev.pageX - dragData.lastX;

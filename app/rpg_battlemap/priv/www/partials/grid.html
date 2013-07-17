@@ -24,7 +24,7 @@
 
         <g ng-controller="ListLayersCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
           <g ng-repeat="layer in layers | filter:isVisible">
-            
+
             <g ng-controller="ListCombatantsCtrl">
 
               <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id">
@@ -50,7 +50,7 @@
                   height="{{combatant.size * 32}}"
                   fill="{{combatant.color}}"
                   rx="16"
-                  ng-mousedown="selectCombatant(combatant)"
+                  ng-mousedown="selectCombatant(combatant, $event)"
                 />
                 <rect
                   x="{{combatant.x * 32}}"
