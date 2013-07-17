@@ -248,8 +248,11 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 		var mouseIsDown = false;
 
 		def.grid_mousedown = function(origin, ev, cellX, cellY){
+			if($scope.name_base == ""){
+				return;
+			}
+
 			mouseIsDown = true;
-			console.log('down');
 			var x = Math.floor(cellX);
 			var y = Math.floor(cellY);
 
@@ -264,12 +267,33 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 				}, layerId)
 			}
 
-			console.log('layer id', layerId);
+			var regEx = RegExp("^" + $scope.name_base + "( \\d+)?$");
+			var reduceFunc = function(red, combatant){
+				var gotNum = 1;
+				var match = regEx.exec(combatant.name);
+				if(match){
+					if(match[1] == null){
+						gotNum = 1;
+					} else {
+						gotNum = parseInt(match[1], 10);
+					}
+					if(gotNum < red){
+						return red;
+					}
+					return gotNum + 1;
+				}
+				return red;
+			}
+			var maybeAppend = $rootScope.Combatants.models.reduce(reduceFunc, 0);
+			var name = $scope.name_base;
+			if(maybeAppend){
+				name += " " + maybeAppend;
+			}
 
 			var combatant = {
 				'x': x,
 				'y': y,
-				'name': $scope.name_base,
+				'name': name,
 				'size': $scope.size,
 				'color': $scope.color,
 				'aura_size': $scope.aura_size,
@@ -279,7 +303,6 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 
 			var defer = $rootScope.Combatants.create(combatant);
 			defer.then(function(success){
-				console.log('combatant created', success);
 				if(mouseIsDown){
 					madeCombatant = success;
 				}
