@@ -29,6 +29,7 @@
 
               <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id">
 
+                <!-- The aura (if any) -->
                 <rect
                   ng-show="{{combatant.aura_size > 0}}"
                   x="{{ (combatant.x - combatant.aura_size) * 32 }}"
@@ -43,6 +44,8 @@
                   rx="16"
                   pointer-events="none"
                 />
+
+                <!-- Combatant rectangle itself -->
                 <rect
                   x="{{combatant.x * 32}}"
                   y="{{combatant.y * 32}}"
@@ -52,6 +55,8 @@
                   rx="16"
                   ng-mousedown="selectCombatant(combatant, $event)"
                 />
+
+                <!-- if selected, the rotating border -->
                 <rect
                   x="{{combatant.x * 32}}"
                   y="{{combatant.y * 32}}"
@@ -66,8 +71,6 @@
                 >
                   <animate attributeType="auto" attributeName="stroke-dashoffset" from="0" to="20" dur="1s" repeatCount="indefinite" />
                 </rect>
-                <text x="{{combatant.x * 32}}" y="{{combatant.y * 32}}">{{combatant.name}}</text>
-                <text x="{{combatant.x * 32}}" y="{{combatant.y * 32 + 15}}">LayerId: {{combatant.layer_id}}</text>
 
               </g>
 
