@@ -51,6 +51,20 @@
                   fill="{{combatant.color}}"
                   rx="16"
                 />
+                <rect
+                  x="{{combatant.x * 32}}"
+                  y="{{combatant.y * 32}}"
+                  width="{{combatant.size * 32}}"
+                  height="{{combatant.size * 32}}"
+                  fill="none"
+                  rx="16"
+                  stroke="blue"
+                  stroke-width="7"
+                  stroke-dasharray="15 5"
+                  ng-show="combatant == combatants.selected"
+                >
+                  <animate attributeType="auto" attributeName="stroke-dashoffset" from="0" to="20" dur="1s" repeatCount="indefinite" />
+                </rect>
                 <text x="{{combatant.x * 32}}" y="{{combatant.y * 32}}">{{combatant.name}}</text>
                 <text x="{{combatant.x * 32}}" y="{{combatant.y * 32 + 15}}">LayerId: {{combatant.layer_id}}</text>
 
