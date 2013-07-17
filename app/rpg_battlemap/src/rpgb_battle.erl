@@ -85,6 +85,22 @@ handle_event({_NotDelete, #rpgb_rec_layer{battlemap_id = MapId} = Layer} = Msg, 
 	tell_consumers(State#state.consumers, Msg),
 	{ok, State#state{layers = Layers}};
 
+handle_event({delete, rpgb_rec_combatant, CombatantId} = Msg, State) ->
+	Combatants = State#state.combatants,
+	case lists:delete(CombatantId, Combatants) of
+		Combatants ->
+			lager:info("ignoring delete request of combatant ~p", [CombatantId]),
+			{ok, State};
+		Combatants1 ->
+			tell_consumers(State#state.consumers, Msg),
+			{ok, State#state{combatants = Combatants1}}
+	end;
+
+handle_event({_NotDelete, #rpgb_rec_combatant{battlemap_id = MapId} = Combatant} = Msg, #state{map_id = MapId} = State) ->
+	Combatants = ordsets:add_element(Combatant#rpgb_rec_combatant.id, State#state.combatants),
+	tell_consumers(State#state.consumers, Msg),
+	{ok, State#state{combatants = Combatants}};
+
 %handle_event({new, Map}, State) when is_record(Map, rpgb_rec_battlemap) ->
 %	{ok, State}.
 
