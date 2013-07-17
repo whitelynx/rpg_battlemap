@@ -2,17 +2,22 @@
 
 <div class="row-fluid">
     <div class="span4">
-        <div class="navbar navbar-small">
+        <div class="navbar navbar-header">
             <div class="navbar-inner">
                 <span class="brand"><i class="icon-globe"></i> Participating Maps</span>
             </div>
         </div>
 
         <div class="container-fluid">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped table-centered">
                 <tr ng-repeat="map in getParticipating(maps)">
                     <td class="expand">
                         <a href="{{ map.url }}">{{ map.name }}</a>
+					</td>
+					<td class="shrink">
+						<!-- This exists to padd the cells correctly; css was being quite the pain, and this was simpler.
+							I assume we'll have some use for buttons here in the future? Til then, use this as a placeholder. -->
+						<a href="{{ map.url }}" class="btn btn-small"><i class="icon-eye-open"></i> View</a>
                     </td>
                 </tr>
             </table>
@@ -20,53 +25,50 @@
     </div>
 
     <div class="span4">
-        <div class="navbar navbar-small">
+        <div class="navbar navbar-header">
             <div class="navbar-inner">
                 <span class="brand"><i class="icon-heart"></i> My Maps</span>
+				<form class="navbar-form pull-right">
+					<input type="text" class="input-large" ng-model="newMapName"> <button class="btn" ng-click="createMap()">New Map</button>
+				</form>
             </div>
         </div>
-
         <div class="container-fluid">
-            <form class="form-inline">
-                <input type="text" class="input-xlarge" ng-model="newMapName"> <button class="btn" ng-click="createMap()">New Map</button>
-            </form>
-
-            <table class="table table-bordered table-striped">
-                <tr ng-repeat="map in maps" ng-show="{{ map.owner == user }}">
-                    <td class="expand">
-                        <a href="{{ map.url }}">{{ map.name }}</a>
-                    </td>
-                    <td class="shrink">
-                        <button class="btn btn-small btn-danger" ng-click="deleteMap(map)"><i class="icon-trash"></i> Delete Map</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
+			<table class="table table-bordered table-striped table-centered">
+				<tr ng-repeat="map in maps" ng-show="{{ map.owner == user }}">
+					<td class="expand">
+						<a href="{{ map.url }}">{{ map.name }}</a>
+					</td>
+					<td class="shrink">
+						<button class="btn btn-small btn-danger" ng-click="deleteMap(map)"><i class="icon-trash"></i> Delete Map</button>
+					</td>
+				</tr>
+			</table>
+		</div>
     </div>
 
     <div class="span4">
-        <div class="navbar navbar-small">
+        <div class="navbar navbar-header">
             <div class="navbar-inner">
                 <span class="brand"><i class="icon-user"></i> My characters</span>
+				<form class="navbar-form pull-right">
+					<input type="text" class="input-large"> <button class="btn">New Character</button>
+				</form>
             </div>
         </div>
-
         <div class="container-fluid">
-            <form class="form-inline">
-                <input type="text" class="input-xlarge"> <button class="btn">New Character</button>
-            </form>
-
-            <table class="table table-bordered table-striped">
-                <tr ng-repeat="character in characters" ng-show="{{ character.owner_id == 1}}">
-                    <td class="expand">
-                        <a href="{{ character.url }}">{{ character.name }}</a>
-                    </td>
-                    <td class="shrink">
-                        <button class="btn btn-small btn-danger"><i class="icon-trash"></i> Delete Character</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
+			<table class="table table-bordered table-striped table-centered" ng-show="characters">
+				<tr ng-repeat="character in characters" ng-show="{{ character.owner_id == 1}}">
+					<td class="expand">
+						<a href="{{ character.url }}">{{ character.name }}</a>
+					</td>
+					<td class="shrink">
+						<button class="btn btn-small btn-danger"><i class="icon-trash"></i> Delete Character</button>
+					</td>
+				</tr>
+			</table>
+			<h4 class="text-center" ng-hide="characters">Please add a character.</h4>
+		</div>
     </div>
 
 </div>
