@@ -36,3 +36,8 @@
 {
     font-size: .65em;
 }
+
+.dropdown-menu
+{
+	padding: 7px;
+}
