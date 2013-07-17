@@ -23,7 +23,20 @@
         <!--<g ng-include="'/partials/layers_svg.html'"></g>-->
 
         <g ng-controller="ListLayersCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
-          <g ng-repeat="layer in layers | filter:isVisible"> </g>
+          <g ng-repeat="layer in layers | filter:isVisible">
+            <text x="10" y="10">{{layer.id}}</text>
+            <g ng-controller="ListCombatantsCtrl">
+
+              <g ng-repeat="combatant in combatants | filter:function(c){ return c.layer_id == layer.id; }">
+
+                <text x="20" y="30">{{combatant.name}}</text>
+                <text x="20" y="45">LayerId: {{combatant.layer_id}}</text>
+
+              </g>
+
+            </g>
+
+          </g>
         </g>
 
         <g ng-controller="MeasureToolCtrl" ng-show="toolData.measuring">
