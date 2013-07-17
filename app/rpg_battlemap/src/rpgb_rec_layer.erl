@@ -4,17 +4,22 @@
 
 -include("rpg_battlemap.hrl").
 
--export([make_json/1, make_json/3]).
+-export([make_json/1, make_json/4]).
 %-export([get_map_layers/1]).
 -export([delete/1, delete/2]).
 -export([update_from_json/2]).
 
 make_json(Layer) ->
-	Zones = rpgb_rec_zone:get_layer_zones(Layer#rpgb_rec_layer.first_zone_id),
-	Auras = rpgb_rec_zone:get_layer_zones(Layer#rpgb_rec_layer.first_aura_id),
-	make_json(Layer, Zones, Auras).
+	MapFun = fun(Id) ->
+		{ok, Zone} = rpgb_data:get_by_id(rpgb_rec_zone, Id),
+		Zone
+	end,
+	Zones = lists:map(MapFun, Layer#rpgb_rec_layer.zone_ids),
+	Scenery = lists:map(MapFun, Layer#rpgb_rec_layer.scenery_ids),
+	Auras = lists:map(MapFun, Layer#rpgb_rec_layer.aura_ids),
+	make_json(Layer, Zones, Scenery, Auras).
 
-make_json(Layer, Zones, Auras) ->
+make_json(Layer, Zones, Scenery, Auras) ->
 	Url = rpgb:get_url(["maps", integer_to_list(Layer#rpgb_rec_layer.battlemap_id), "layers", integer_to_list(Layer#rpgb_rec_layer.id)]),
 	ZoneJsons = [rpgb_rec_zone:make_json(Zone, Layer#rpgb_rec_layer.battlemap_id) || Zone <- Zones],
 	AurasJsons = [rpgb_rec_zone:make_json(Aura, Layer#rpgb_rec_layer.battlemap_id) || Aura <- Auras],
@@ -43,6 +48,8 @@ delete(#rpgb_rec_layer{battlemap_id = MapId} = Layer, #rpgb_rec_battlemap{id = M
 	Layers = lists:delete(Layer#rpgb_rec_layer.id, Map#rpgb_rec_battlemap.layer_ids),
 	{ok, Map2} = rpgb_data:save(Map#rpgb_rec_battlemap{layer_ids = Layers}),
 	rpgb_data:delete(Layer),
+	move_combatants(Layer),
+	delete_zones(Layer),
 	{ok, Map2}.
 
 update_from_json(Json, InitLayer) when is_integer(InitLayer) ->
@@ -142,4 +149,14 @@ validate_json({Json, Layer}) ->
 			{error, {invalid, Body}}
 	end.
 	
+move_combatants(#rpgb_rec_layer{id = Id}) ->
+	{ok, Combatants} = rpgb_data:search(rpgb_rec_combatant, [{layer_id, Id}]),
+	lists:map(fun(C) ->
+		rpgb_data:save(C#rpgb_rec_combatant{layer_id = undefined})
+	end, Combatants).
 
+delete_zones(#rpgb_rec_layer{id = Id}) ->
+	{ok, Zones} = rpgb_data:search(rpgb_rec_zone, [{layer_id, Id}]),
+	lists:map(fun(Z) ->
+		rpgb_data:delete(Z)
+	end, Zones).
