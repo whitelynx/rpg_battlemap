@@ -9,7 +9,7 @@
 -export([append/1, append/2]).
 
 make_json(Combatant) ->
-	Url = rpgb:get_url(["map", 
+	Url = rpgb:get_url(["maps", 
 		integer_to_list(Combatant#rpgb_rec_combatant.battlemap_id),
 		"combatants", integer_to_list(Combatant#rpgb_rec_combatant.id)]),
 	Combatant:to_json([{url, Url}]).
