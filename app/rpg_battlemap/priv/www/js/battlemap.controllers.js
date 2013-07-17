@@ -135,11 +135,6 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 		})
 	};
 
-	$scope.isOnLayer = function(combatant, layer){
-		console.log('isOnLayer', combatant, layer, this);
-		return false;
-	};
-
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {

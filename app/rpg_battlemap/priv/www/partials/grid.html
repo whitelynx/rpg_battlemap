@@ -27,7 +27,7 @@
             <text x="10" y="10">{{layer.name}}: {{layer.id}}</text>
             <g ng-controller="ListCombatantsCtrl">
 
-              <g ng-repeat="combatant in combatants | filter:combatant.layer_id == layer.id ">
+              <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id">
 
                 <rect
                   ng-show="{{combatant.aura_size > 0}}"
