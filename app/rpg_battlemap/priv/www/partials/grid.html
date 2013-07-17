@@ -24,7 +24,7 @@
 
         <g ng-controller="ListLayersCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
           <g ng-repeat="layer in layers | filter:isVisible">
-            <text x="10" y="10">{{layer.name}}: {{layer.id}}</text>
+            
             <g ng-controller="ListCombatantsCtrl">
 
               <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id">
