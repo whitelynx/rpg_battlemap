@@ -246,6 +246,7 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 
 	var makeAddCombatantTool = function(def){
 		def.name = 'Add Combatant';
+		var madeCombatant = false;
 
 		def.grid_mousedown = function(origin, ev, cellX, cellY){
 			var x = Math.floor(cellX);
@@ -278,10 +279,24 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 			var defer = $rootScope.Combatants.create(combatant);
 			defer.then(function(success){
 				console.log('combatant created', success);
+				madeCombatant = success;
 			},
 			function(fail){
 				console.error('could not make combatant', fail);
 			});
+
+		};
+
+		def.grid_mouseup = function(){
+			madeCombatant = false;
+		};
+
+		def.grid_mousemove = function(origin, ev, cellX, cellY){
+			if(madeCombatant){
+				madeCombatant.x = Math.floor(cellX);
+				madeCombatant.y = Math.floor(cellY);
+				madeCombatant.$save();
+			}
 		};
 
 		return def;
