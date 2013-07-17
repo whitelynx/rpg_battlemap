@@ -96,6 +96,35 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope){
 	}
 });
 
+Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
+	$scope.combatants = $rootScope.Combatants.models;
+
+	$scope.removeCombatant = function(combatant){
+		var defer = combatant.$delete();
+		defer.then(function(success){
+			return true;
+		},
+		function(fail){
+			console.error('could not delete combatant', combatant, fail);
+		});
+	};
+
+	$scope.selectCombatant = function(combatant){
+		$scope.combatants.selected = combatant;
+	};
+
+	$scope.saveCombatant = function(ev, combatant){
+		var defer = combatant.$save();
+		defer.then(function(success){
+			return true;
+		},
+		function(fail){
+			console.error('could not save combatant', fail, combatant);
+		});
+	};
+
+});
+
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 	// the resource thing doesn't really do hateaos well, but then again
 	// neither does the browser. ah well.
@@ -178,8 +207,7 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 	};
 
 	$scope.buttons = [
-		{ name: 'Combatants', menu: [] },
-		{ name: 'Zones & Auras', menu: [] },
+		{ name: 'Zones & Auras', menu: [] }
 	];
 
 	$scope.mapBackgroundCssObject = function(){
@@ -201,6 +229,30 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 
 	var makeAddCombatantTool = function(def){
 		def.name = 'Add Combatant';
+
+		def.grid_mousedown = function(origin, ev, cellX, cellY){
+			var x = Math.floor(cellX);
+			var y = Math.floor(cellY);
+
+			var combatant = {
+				'x': x,
+				'y': y,
+				'name': $scope.name_base,
+				'size': $scope.size,
+				'color': $scope.color,
+				'aura_size': $scope.aura_size,
+				'aura_color': $scope.aura_color
+			};
+
+			var defer = $rootScope.Combatants.create(combatant);
+			defer.then(function(success){
+				console.log('combatant created', success);
+			},
+			function(fail){
+				console.error('could not make combatant', fail);
+			});
+		};
+
 		return def;
 	};
 

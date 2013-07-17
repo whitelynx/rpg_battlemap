@@ -8,6 +8,53 @@
 
 	<div class="btn-group" ng-include="'/partials/layers_menu.html'"></div>
 
+	<div class="btn-group" ng-controller="ListCombatantsCtrl">
+		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Combatants<span class="caret"> </span></a>
+		<ul class="dropdown-menu">
+
+			<li ng-repeat="combatant in combatants" style="clear:both;">
+				<p ng-click="selectCombatant(combatant)" ng-class="{'selected':selected == combatant}">
+					{{ combatant.name }}
+				</p>
+			</li>
+
+		</ul>
+	</div>
+
+	<div class="btn-group" ng-controller="ListCombatantsCtrl" ng-show="combatants.selected">
+		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">
+			{{combatants.selected.name}} <span class="caret"> </span>
+		</a>
+		<ul class="dropdown-menu">
+
+			<li>
+				<label for="selCombatantName">Name</label>
+				<input ng-model="combatants.selected.name" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" name="selCombatatnName" />
+			</li>
+
+			<li>
+				<label for="selCombatantSize">Size</label>
+				<input ng-model="combatants.selected.size" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" name="selCombatantSize" type="number" step="1" min="1" max="10" />
+			</li>
+
+			<li>
+				<label for="selCombatantColor">Color</label>
+				<input ng-model="combatants.selected.color" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" name="selCombatantColor" type="color" />
+			</li>
+
+			<li>
+				<label for="selCombatantAuraSize">Aura Size</label>
+				<input ng-model="combatants.selected.aura_size" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" name="selCombatantAuraSize" type="number" step="1" min="0" max="20" />
+			</li>
+
+			<li>
+				<label for="selCombatantAuraColor">Aura Color</label>
+				<input ng-model="combatants.selected.aura_color" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" name="selCombatantAuraColor" type="color" />
+			</li>
+
+		</ul>
+	</div>
+
 	<div class="btn-group" ng-repeat="button in buttons" ng-show="button.menu != undefined">
 		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">
 			{{ button.name }}

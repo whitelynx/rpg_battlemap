@@ -393,8 +393,9 @@ dispatch(Req, State, From, <<"put">>, <<"combatant">>, Id, Json) ->
 	case rpgb_data:get_by_id(rpgb_rec_combatant, Id) of
 		{ok, #rpgb_rec_combatant{battlemap_id = MapId} = Combatant} when MapId =:= State#state.map#rpgb_rec_battlemap.id ->
 			case rpgb_rec_combatant:validate(Json, Combatant) of
-				{ok, Rec} ->
-					Reply = make_reply(From, true, rpgb_rec_combatant:make_json(Rec)),
+				{ok, {Json2, Rec}} ->
+					{ok, Rec2} = rpgb_data:save(Rec),
+					Reply = make_reply(From, true, rpgb_rec_combatant:make_json(Rec2)),
 					{reply, {text, Reply}, Req, State};
 				{error, {invalid, Txt}} ->
 					Reply = make_reply(From, false, jsx:to_json(Txt)),
