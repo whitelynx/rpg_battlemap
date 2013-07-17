@@ -13,7 +13,7 @@
 		<ul class="dropdown-menu">
 
 			<li ng-repeat="combatant in combatants" style="clear:both;">
-				<p ng-click="selectCombatant(combatant)" ng-class="{'selected':selected == combatant}">
+				<p ng-click="selectCombatant(combatant)" ng-class="{'selected':combatants.selected == combatant}">
 					{{ combatant.name }}
 				</p>
 			</li>
