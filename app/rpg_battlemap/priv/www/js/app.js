@@ -329,6 +329,7 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		'query':{'method':'GET', 'isArray':true, 'params':{'mapid':''}}});
 
 		$rootScope.Layers = SocketResource('layer');
+		$rootScope.Combatants = SocketResource('combatant');
 
 		$rootScope.stopPropagation = function(ev){
 			ev.stopPropagation();
