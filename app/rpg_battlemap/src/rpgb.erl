@@ -9,13 +9,24 @@
 	sluggify/1, get_routes/2]).
 %-export([is_printable/1, is_not_printable/1, is_string/1]).
 %-export([to_json/1, to_json/2]).
--export([set_proplist/3, set_proplist/2]).
+-export([set_proplist/3, set_proplist/2, scrub_disallowed/2]).
 -export([now_to_timestamp/1]).
 -export([refresh_templates/1]).
 -export([bind/2]).
 -export([splice/3,splice/4]).
 -export([snip/2]).
 -export([start_app/1]).
+
+scrub_disallowed(Json, []) ->
+	Json;
+
+scrub_disallowed(Json, [Nope | Tail] = Nopes) ->
+	case proplists:delete(Nope, Json) of
+		Json ->
+			scrub_disallowed(Json, Tail);
+		Json2 ->
+			scrub_disallowed(Json2, Nopes)
+	end.
 
 start_app(AppName) ->
 	case application:start(AppName) of

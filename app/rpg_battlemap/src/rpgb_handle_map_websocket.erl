@@ -170,6 +170,8 @@ maybe_add_type(Type, Json) when is_binary(Type) ->
 	[{<<"type">>, Type} | Json];
 maybe_add_type(rpgb_rec_layer, Json) ->
 	[{<<"type">>, <<"layer">>} | Json];
+maybe_add_type(rpgb_rec_combatant, Json) ->
+	[{<<"type">>, <<"combatant">>} | Json];
 maybe_add_type(Huh, Json) ->
 	?debugFmt("I don't understand the type ~p", [Huh]),
 	Json.
@@ -336,6 +338,89 @@ dispatch(Req, State, From, <<"post">>, <<"layer">>, undefined, Json) ->
 dispatch(Req, State, From, <<"post">>, <<"layer">>, _Layer, _Json) ->
 	Reply = make_reply(From, false, <<"invalid action">>),
 	{reply, {reply, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"delete">>, <<"combatant">>, undefined, _Json) ->
+	Reply = make_reply(From, false, <<"must specify combatant">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"delete">>, <<"combatant">>, Id, _Json) ->
+	case rpgb_data:get_by_id(rpgb_rec_combatant, Id) of
+		{ok, #rpgb_rec_combatant{battlemap_id = MapId} = Combatant} when MapId =:= State#state.map#rpgb_rec_battlemap.id ->
+			case rpgb_rec_combatant:delete(Combatant, State#state.map) of
+				{ok, Map2} ->
+					Reply = make_reply(From, true, undefined),
+					{reply, {text, Reply}, Req, State#state{map = Map2}};
+				{error, Wut} ->
+					Reply = make_reply(From, false, iolist_to_binary(io_lib:format("unknown error: ~p", [Wut]))), 
+					{reply, {text, Reply}, Req, State}
+			end;
+		_ ->
+			Reply = make_reply(From, false, <<"invalid combatant">>),
+			{reply, {text, Reply}, Req, State}
+	end;
+
+dispatch(Req, State, From, <<"get">>, <<"combatant">>, undefined, _Json) ->
+	Combatants = lists:map(fun(Id) ->
+		{ok, Combatant} = rpgb_data:get_by_id(rpgb_rec_combatant, Id),
+		Combatant
+	end, State#state.map#rpgb_rec_battlemap.combatant_ids),
+	Json = lists:map(fun(C) ->
+		rpgb_rec_combatant:make_json(C)
+	end, Combatants),
+	Reply = make_reply(From, true, Json),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"get">>, <<"combatant">>, Id, _Json) ->
+	case rpgb_data:get_by_id(rpgb_rec_combatant, Id) of
+		{ok, #rpgb_rec_combatant{battlemap_id = MapId} = Combatant} when MapId =:= State#state.map#rpgb_rec_battlemap.id ->
+			Json = rpgb_rec_combatant:make_json(Combatant),
+			Reply = make_reply(From, true, Json),
+			{reply, {text, Reply}, Req, State};
+		_ ->
+			Reply = make_reply(From, false, <<"invalid combatant">>),
+			{reply, {text, Reply}, Req, State}
+	end;
+
+dispatch(Req, State, From, <<"put">>, <<"combatant">>, undefined, _Json) ->
+	Reply = make_reply(From, false, <<"cannot put to combatants list">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"put">>, <<"combatant">>, Id, Json) ->
+	case rpgb_data:get_by_id(rpgb_rec_combatant, Id) of
+		{ok, #rpgb_rec_combatant{battlemap_id = MapId} = Combatant} when MapId =:= State#state.map#rpgb_rec_battlemap.id ->
+			case rpgb_rec_combatant:validate(Json, Combatant) of
+				{ok, Rec} ->
+					Reply = make_reply(From, true, rpgb_rec_combatant:make_json(Rec)),
+					{reply, {text, Reply}, Req, State};
+				{error, {invalid, Txt}} ->
+					Reply = make_reply(From, false, jsx:to_json(Txt)),
+					{reply, {text, Reply}, Req, State}
+			end;
+		_ ->
+			Reply = make_reply(From, false, jsx:to_json(<<"invalid combatant">>)),
+			{reply, {text, Reply}, Req, State}
+	end;
+
+dispatch(Req, State, From, <<"post">>, <<"combatant">>, undefined, Json) ->
+	case rpgb_rec_combatant:validate(Json) of
+		{ok, {_Json2, Rec}} ->
+			Rec2 = #rpgb_rec_combatant{
+				battlemap_id = State#state.map#rpgb_rec_battlemap.id,
+				owner_id = State#state.user#rpgb_rec_user.id,
+				created = os:timestamp(),
+				updated = os:timestamp()
+			},
+			{ok, {Rec3, Map2}} = rpgb_rec_combatant:append(Rec2, State#state.map),
+			Reply = make_reply(From, true, rpgb_rec_combatant:make_json(Rec3)),
+			{reply, {text, Reply}, Req, State};
+		{error, {invalid, Txt}} ->
+			Reply = make_reply(From, false, Txt),
+			{reply, {text, Reply}, Req, State}
+	end;
+
+dispatch(Req, State, From, <<"post">>, <<"combatant">>, _Id, _Json) ->
+	Reply = make_reply(From, false, <<"invalid action">>),
+	{reply, {text, Reply}, Req, State};
 
 dispatch(Req, State, From, Action, Type, Id, Data) ->
 	?debugFmt("no reply, just not gonna do anything~n"

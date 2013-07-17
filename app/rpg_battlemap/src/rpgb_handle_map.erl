@@ -177,7 +177,7 @@ from_json(Req, #ctx{mapid = MapId} = Ctx) ->
 				owner_id = User#rpgb_rec_user.id,
 				participant_ids = [],
 				layer_ids = [],
-				first_combatant_id = undefined,
+				combatant_ids = [],
 				created = os:timestamp(),
 				updated = os:timestamp()
 			};

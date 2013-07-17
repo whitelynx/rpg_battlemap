@@ -12,7 +12,8 @@
 make_json(Map) ->
 	Layers1 = [rpgb_data:get_by_id(rpgb_rec_layer, Id) || Id <- Map#rpgb_rec_battlemap.layer_ids],
 	Layers = [LayerRec || {ok, LayerRec} <- Layers1],
-	Combatants = rpgb_rec_combatant:get_map_combatants(Map#rpgb_rec_battlemap.first_combatant_id),
+	Combatants1 = [rpgb_data:get_by_id(rpgb_rec_combatant, Id) || Id <- Map#rpgb_rec_battlemap.combatant_ids],
+	Combatants = [CombatantRec || {ok, CombatantRec} <- Combatants1],
 	make_json(Map, Layers, Combatants).
 
 make_json(Map, Layers, Combatants) ->

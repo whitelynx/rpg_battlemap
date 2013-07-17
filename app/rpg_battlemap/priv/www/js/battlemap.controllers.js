@@ -285,9 +285,21 @@ Controllers.controller("MeasureToolCtrl", function($scope, $rootScope, Tool){
 		$scope.toolData = newTool;
 	});
 
+	var safeToolData = function(){
+		var args = Array.prototype.slice.call(arguments, 0);
+		var def = args.shift();
+
+		var reduceFunc = function(red, prop){
+			return red[prop] || false;
+		};
+
+		var reduced = args.reduce(reduceFunc, $scope.toolData);
+		return reduced || def;
+	};
+
 	$scope.mid = function(prop){
-		var n1 = $scope.toolData.start[prop];
-		var n2 = $scope.toolData.stop[prop];
+		var n1 = safeToolData(0, 'start', prop);
+		var n2 = safeToolData(0, 'stop', prop);
 		return (n1 + n2) / 2;
 	};
 
@@ -310,6 +322,34 @@ Controllers.controller("MeasureToolCtrl", function($scope, $rootScope, Tool){
 	$scope.transformY = function(n){
 		return $scope.transform(n, $scope.translate.y);
 	};
+
+	$scope.startX = function(){
+		var x = safeToolData(0, 'start', 'x') + 0.5;
+		return $scope.transformX(x * 32);
+	};
+
+	$scope.startY = function(){
+		var y = safeToolData(0, 'start', 'y') + 0.5;
+		return $scope.transformY(y * 32);
+	}
+
+	$scope.stopX = function(){
+		var x = safeToolData(0, 'stop', 'x') + 0.5;
+		return $scope.transformX(x * 32);
+	};
+
+	$scope.stopY = function(argument) {
+		var y = safeToolData(0, 'stop', 'y') + 0.5;
+		return $scope.transformY(y * 32);
+	};
+
+	$scope.distance = function(){
+		if($scope.toolData.start){
+			return $scope.toolData.distance();
+		}
+		return 0;
+	};
+
 });
 
 Controllers.controller("EditMapCtrl", function($scope, $rootScope) {

@@ -36,7 +36,7 @@
 	gridline_color = <<"black">> :: binary(),
 	grid_opacity = 0.5 :: float(),
 	layer_ids = [] :: [pos_integer()], % list is bottom up order
-	first_combatant_id :: pos_integer(),
+	combatant_ids = [] :: [pos_integer()],
 	created :: time(),
 	updated :: time()
 }).
@@ -83,7 +83,6 @@
 	y = 0 :: integer(),
   layer_id :: 'undefined' | pos_integer(),
 	initiative = 1 :: number(),
-	next_combatant_id :: pos_integer(),
 	size = 1 :: pos_integer(),
 	aura_size = 0 :: non_neg_integer(),
 	aura_color :: 'undefined' | binary(),

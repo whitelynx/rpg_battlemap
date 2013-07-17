@@ -28,28 +28,28 @@
 
         <g ng-controller="MeasureToolCtrl" ng-show="toolData.measuring">
           <line
-            x1="{{ transformX((toolData.start.x + 0.5) * 32) }}"
-            y1="{{ transformY((toolData.start.y + 0.5) * 32) }}"
-            x2="{{ transformX((toolData.stop.x + 0.5) * 32) }}"
-            y2="{{ transformY((toolData.stop.y + 0.5) * 32) }}"
+            x1="{{ startX() }}"
+            y1="{{ startY() }}"
+            x2="{{ stopX() }}"
+            y2="{{ stopY() }}"
             stroke="black" stroke-width="9" stroke-linecap="round" />
           <line
-            x1="{{ transformX((toolData.start.x + 0.5) * 32) }}"
-            y1="{{ transformY((toolData.start.y + 0.5) * 32) }}"
-            x2="{{ transformX((toolData.stop.x + 0.5) * 32) }}"
-            y2="{{ transformY((toolData.stop.y + 0.5) * 32) }}"
+            x1="{{ startX() }}"
+            y1="{{ startY() }}"
+            x2="{{ stopX() }}"
+            y2="{{ stopY() }}"
             stroke="white" stroke-width="5" stroke-linecap="round" />
           <rect
             x="{{ transformX( midx() * 32 ) - 3}}"
             y="{{ transformY( midy() * 32 ) - 16 }}"
-            width="{{ toolData.distance().toString().length * 12 }}"
+            width="{{ distance().toString().length * 12 }}"
             height="24"
             rx="8"
             ry="8"
           />
           <text
-            x="{{ transformX( ( toolData.start.x + toolData.stop.x) / 2 * 32) }}"
-            y="{{ transformY( ( toolData.start.y + toolData.stop.y) / 2 * 32) }}"
+            x="{{ transformX( midx() * 32) }}"
+            y="{{ transformY( midy() * 32) }}"
             fill="white"
             stroke="white"
           >{{ toolData.distance() }}</text>
