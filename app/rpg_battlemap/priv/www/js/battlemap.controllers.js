@@ -123,6 +123,18 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 		});
 	};
 
+	$scope.deleteCombatant = function(ev, combatant){
+		var defer = combatant.$delete();
+		defer.then(function(success){
+			if($scope.combatants.selected == combatant){
+				$scope.combatants.selected = null;
+			}
+		},
+		function(fail){
+			console.error('could not delete combatant', fail, combatant);
+		})
+	};
+
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {

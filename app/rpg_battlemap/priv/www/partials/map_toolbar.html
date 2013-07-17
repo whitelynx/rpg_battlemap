@@ -52,6 +52,10 @@
 				<input ng-model="combatants.selected.aura_color" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" name="selCombatantAuraColor" type="color" />
 			</li>
 
+			<li>
+				<button class="btn btn-danger" ng-click="deleteCombatant($event, combatants.selected)">Delete</button>
+			</li>
+
 		</ul>
 	</div>
 
