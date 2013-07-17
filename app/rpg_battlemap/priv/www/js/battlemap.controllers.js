@@ -188,8 +188,24 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 	}
 });
 
+Controllers.controller("AddCombatantToolCtrl", function($scope, Tool){
+	$scope.$on('grid_toolchange', function(ev, newTool){
+		$scope.toolName = newTool.name;
+	});
+
+	$scope.name = 'Fight Man';
+	$scope.size = 1;
+	$scope.color = 'green';
+	$scope.aura_size = 0;
+	$scope.aura_color = 'green';
+});
+
 Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 	$scope.currentTool = Tool.currentTool;
+
+	$scope.$on('grid_toolchange', function(ev, newTool){
+		$scope.currentTool = newTool;
+	});
 
 	var makePanTool = function(def){
 		var dragData = {};

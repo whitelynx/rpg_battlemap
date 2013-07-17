@@ -1,7 +1,30 @@
-<button class="btn btn-small active" title="Normal" ng-click="setTool('Normal')">
-	<i class="icon-hand-up"></i>
-</button>
 
-<button class="btn btn-small" title="Measure" ng-click="setTool('measure')">
-	<i class="icon-map-marker"></i>
+<div class="btn-group" ng-controller="AddCombatantToolCtrl">
+	<button class="btn btn-small" ng-class="{'active':toolName == 'Add Combatant'}">{{ name }}</button>
+	<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+		<span class="caret"></span>
+	</button>
+	<ul class="dropdown-menu">
+		<li><a tabindex="-1" href="#">Action</a></li>
+		<li><a tabindex="-1" href="#">Another action</a></li>
+		<li><a tabindex="-1" href="#">Something else here</a></li>
+		<li class="divider"></li>
+		<li><a tabindex="-1" href="#">Separated link</a></li>
+	</ul>
+</div>
+
+<div class="btn-group" data-toggle="buttons-radio" ng-controller="MapToolsCtrl">
+
+	<button class="btn btn-small" ng-class="{'active':currentTool.name == 'Pan Map'}"title="Normal" ng-click="setTool('Normal')">
+		<i class="icon-hand-up"></i>
+	</button>
+
+	<button class="btn btn-small" ng-class="{'active':currentTool.name == 'Measure'}" title="Measure" ng-click="setTool('measure')">
+		<i class="icon-map-marker"></i>
+	</button>
+
+</div>
+
+<button class="btn btn-small" title="Collapse controls" data-toggle="collapse" data-target="#top-bar" ng-click="handleToggle()">
+	<i ng-class="{'open': 'icon-double-angle-down', 'closed': 'icon-double-angle-up'}[topBarToggle]"></i>
 </button>
