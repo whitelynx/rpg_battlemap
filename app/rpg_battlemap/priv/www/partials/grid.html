@@ -30,13 +30,25 @@
               <g ng-repeat="combatant in combatants | filter:combatant.layer_id == layer.id ">
 
                 <rect
+                  ng-show="{{combatant.aura_size > 0}}"
+                  x="{{ (combatant.x - combatant.aura_size) * 32 }}"
+                  y="{{ (combatant.y - combatant.aura_size) * 32 }}"
+                  width="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
+                  height="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
+                  fill="{{combatant.aura_color}}"
+                  fill-opacity="0.3"
+                  stroke="{{combatant.aura_color}}"
+                  stoke-width="10"
+                  stoke-opacity="1"
+                  rx="16"
+                />
+                <rect
                   x="{{combatant.x * 32}}"
                   y="{{combatant.y * 32}}"
                   width="{{combatant.size * 32}}"
                   height="{{combatant.size * 32}}"
                   fill="{{combatant.color}}"
                   rx="16"
-                  ry="16"
                 />
                 <text x="{{combatant.x * 32}}" y="{{combatant.y * 32}}">{{combatant.name}}</text>
                 <text x="{{combatant.x * 32}}" y="{{combatant.y * 32 + 15}}">LayerId: {{combatant.layer_id}}</text>
