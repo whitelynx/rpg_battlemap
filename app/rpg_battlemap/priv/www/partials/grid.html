@@ -29,9 +29,8 @@
 
               <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id">
 
-                <!-- The aura (if any) -->
+                <!-- The aura -->
                 <rect
-                  ng-show="{{combatant.aura_size > 0}}"
                   x="{{ (combatant.x - combatant.aura_size) * 32 }}"
                   y="{{ (combatant.y - combatant.aura_size) * 32 }}"
                   width="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
