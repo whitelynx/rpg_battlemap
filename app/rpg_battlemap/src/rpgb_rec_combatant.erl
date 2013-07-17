@@ -96,6 +96,8 @@ check_blank_name({Json, _Rec} = In) ->
 	case proplists:get_value(<<"name">>, Json) of
 		<<>> ->
 			{error, {invalid, <<"name cannot be blank">>}};
+		null ->
+			{error, {invalid, <<"name cannot be blank">>}};
 		_ ->
 			{ok, In}
 	end.

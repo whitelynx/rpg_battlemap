@@ -36,6 +36,7 @@ websocket_init(_TransportName, Req, _Opt) ->
 		{ok, {Req1, State}} ->
 			{ok, Req1, State};
 		{error, Req2} ->
+			?warning("Could not setup websocket"),
 			{shutdown, Req2}
 	end.
 
@@ -98,7 +99,7 @@ battle_joined({Req, State}) ->
 		ok ->
 			{ok, {Req, State}};
 		Error ->
-			?debugFmt("Battle could not be joined: ~p", [Error]),
+			?info("Battle could not be joined: ~p", [Error]),
 			{ok, Req1} = cowboy_req:reply(500, Req),
 			{error, {Req1, State}}
 	end.
@@ -111,6 +112,7 @@ get_session({Req, _State}) ->
 get_user({Req, State}) ->
 	case rpgb_session:get_user(State#state.session) of
 		undefined ->
+			?info("No user associated with session"),
 			{ok, Req1} = cowboy_req:reply(401, Req),
 			{error, Req1};
 		User ->
@@ -125,6 +127,7 @@ map_id_is_integer({Req, State}) ->
 			{ok, {Req, State2}}
 	catch
 		error:badarg ->
+			?info("map id provided is not an integer"),
 			{ok, Req3} = cowboy_req:reply(404, Req1),
 			{error, Req3}
 	end.
@@ -132,6 +135,7 @@ map_id_is_integer({Req, State}) ->
 map_exists({Req, State}) ->
 	case rpgb_data:get_by_id(rpgb_rec_battlemap, State#state.map) of
 		{error, notfound} ->
+			?info("Map doesn't exist"),
 			{ok, Req1} = cowboy_req:reply(404, Req),
 			{error, Req1};
 		{ok, Map} ->
@@ -140,7 +144,7 @@ map_exists({Req, State}) ->
 
 user_is_participant({Req, State}) ->
 	#state{user = User, map = Map} = State,
-	?debugFmt("Checking if user ~p is participant of map ~p", [User#rpgb_rec_user.id, Map]),
+	?info("Checking if user ~p is participant of map ~p", [User#rpgb_rec_user.id, Map]),
 	case rpgb_rec_battlemap:is_user_participant(User, Map) of
 		true ->
 			{ok, {Req, State}};
@@ -337,7 +341,7 @@ dispatch(Req, State, From, <<"post">>, <<"layer">>, undefined, Json) ->
 
 dispatch(Req, State, From, <<"post">>, <<"layer">>, _Layer, _Json) ->
 	Reply = make_reply(From, false, <<"invalid action">>),
-	{reply, {reply, Reply}, Req, State};
+	{reply, {text, Reply}, Req, State};
 
 dispatch(Req, State, From, <<"delete">>, <<"combatant">>, undefined, _Json) ->
 	Reply = make_reply(From, false, <<"must specify combatant">>),
