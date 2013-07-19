@@ -508,9 +508,24 @@ dispatch(Req, State, From, <<"delete">>, {rpgb_rec_zone, Mode}, Id, Json) ->
 	{reply, {text, Reply}, Req, State};
 
 dispatch(Req, State, From, <<"get">>, {rpgb_rec_zone, Mode}, undefined, Json) ->
-	Reply = case proplists:get_value(<<"layer_id">>, Json) of
+	Json2 = case Json of undefined -> []; _ -> Json end,
+	Reply = case proplists:get_value(<<"layer_id">>, Json2) of
 		undefined ->
-			make_reply(From, false, <<"not found">>);
+			LayerIds = State#state.map#rpgb_rec_battlemap.layer_ids,
+			ZoneIdsLists = lists:map(fun(Id) ->
+				{ok, Layer} = rpgb_data:get_by_id(rpgb_rec_layer, Id),
+				case Mode of
+					aura -> Layer#rpgb_rec_layer.aura_ids;
+					zone -> Layer#rpgb_rec_layer.zone_ids;
+					scenery -> Layer#rpgb_rec_layer.scenery_ids
+				end
+			end, LayerIds),
+			ZoneIds = lists:flatten(ZoneIdsLists),
+			OutJson = lists:map(fun(Id) ->
+				{ok, Zone} = rpgb_data:get_by_id(rpgb_rec_zone, Id),
+				rpgb_rec_zone:make_json(Zone)
+			end, ZoneIds),
+			make_reply(From, false, OutJson);
 		LayerId ->
 			MapId = State#state.map#rpgb_rec_battlemap.id,
 			case rpgb_data:get_by_id(rpgb_rec_layer, LayerId) of
