@@ -454,6 +454,8 @@ dispatch(Req, State, From, <<"post">>, {rpgb_rec_zone, Mode}, undefined, Json) -
 							OutJson = rpgb_rec_zone:make_json(Rec2),
 							make_reply(From, true, OutJson);
 						{error, {invalid, Txt}} ->
+							make_reply(From, false, Txt);
+						{error, {conflict, Txt}} ->
 							make_reply(From, false, Txt)
 					end;
 				_ ->
