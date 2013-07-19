@@ -406,21 +406,52 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 			def.name = 'Add Zone';
 			def.grid_mousedown = function(origin, ev, cellX, cellY){
 
-				var layerId = null;
+				var layer = false;
 				if($rootScope.Layers.models.selected){
-					layerId = $rootScope.Layers.models.selected.id;
+					layer = $rootScope.Layers.models.selected;
 				} else {
-					layerId = $rootScope.Layers.models.reduceRight(function(red, layer){
+					layer = $rootScope.Layers.models.reduceRight(function(red, layer){
 						if(layer.visible){
-							return red || layer.id;
+							return red || layer;
 						}
-					}, layerId)
+					}, layer)
+				}
+
+				if(! layer){
+					console.error("no layer found to put zone on", layer);
+					return;
+				}
+
+				var regEx = RegExp("^" + $scope.name + "( \\d+)?$");
+				var reduceFunc = function(red, zone){
+					if(zone.layer_id != layer.id){
+						return red;
+					}
+					var gotNum = 1;
+					var match = regEx.exec(zone.name);
+					if(match){
+						if(match[1] == null){
+							gotNum = 1;
+						} else {
+							gotNum = parseInt(match[1], 10);
+						}
+						if(gotNum < red){
+							return red;
+						}
+						return gotNum + 1;
+					}
+					return red;
+				}
+				var maybeAppend = $rootScope.Zones.models.reduce(reduceFunc, 0);
+				var name = $scope.name;
+				if(maybeAppend){
+					name += " " + maybeAppend;
 				}
 
 				var newZone = {
-					name:$scope.name,
+					name:name,
 					shape: $scope.shape,
-					layer_id: layerId
+					layer_id: layer.id
 				};
 
 				if($scope.shape == 'rect'){

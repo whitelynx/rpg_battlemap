@@ -27,7 +27,16 @@
               <g ng-repeat="zone in zones" ng-show="layer.id == zone.layer_id">
 
                 <g ng-switch="zone.shape">
-                  <rect ng-switch-when="rect" fill="red" x="10" y="20" width="60" height="80" />
+                  <rect ng-switch-when="rect"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    x="{{zone.x * 32}}"
+                    y="{{zone.y * 32}}"
+                    width="{{zone.width * 32}}"
+                    height="{{zone.height * 32}}" />
                 </g>
 
               </g>
