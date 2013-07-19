@@ -187,7 +187,7 @@ Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 		}
 	};
 
-	$scope.saveZone = function(ev, zone){
+	$scope.saveZone = function(zone, ev){
 		var defer = zone.$save();
 		defer.then(function(success){
 			return true;
@@ -278,10 +278,6 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 		console.log('saving map', $scope.map);
 		$scope.map.$save();
 	};
-
-	$scope.buttons = [
-		{ name: 'Zones & Auras', menu: [] }
-	];
 
 	$scope.mapBackgroundCssObject = function(){
 		var out = {'backgroundColor': $scope.map.background_color};
