@@ -525,7 +525,7 @@ dispatch(Req, State, From, <<"get">>, {rpgb_rec_zone, Mode}, undefined, Json) ->
 				{ok, Zone} = rpgb_data:get_by_id(rpgb_rec_zone, Id),
 				rpgb_rec_zone:make_json(Zone)
 			end, ZoneIds),
-			make_reply(From, false, OutJson);
+			make_reply(From, true, OutJson);
 		LayerId ->
 			MapId = State#state.map#rpgb_rec_battlemap.id,
 			case rpgb_data:get_by_id(rpgb_rec_layer, LayerId) of
