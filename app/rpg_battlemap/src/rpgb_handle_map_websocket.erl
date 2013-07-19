@@ -62,7 +62,7 @@ websocket_handle(_Msg, Req, State) ->
 
 websocket_info({map_event, {update, Record}}, Req, State) ->
 	?debugFmt("map update event: ~p", [Record]),
-	Frame = make_frame(element(1, Record), element(2, Record), <<"put">>, undefined, Record:make_json()),
+	Frame = make_frame(Record, element(2, Record), <<"put">>, undefined, Record:make_json()),
 	State2 = if
 		is_record(Record, rpgb_rec_battlemap) ->
 			State#state{map = Record};
@@ -186,6 +186,7 @@ maybe_add_type(Type, Json) when is_binary(Type) ->
 	[{<<"type">>, Type} | Json];
 maybe_add_type(Huh, Json) ->
 	?debugFmt("I don't understand the type ~p", [Huh]),
+	lager:warning("I don't understand the type ~p", [Huh]),
 	Json.
 
 maybe_add_id(undefined, Json) ->
