@@ -76,6 +76,14 @@ websocket_info({map_event, {new, Record}}, Req, State) ->
 	Frame = make_frame(Record, element(2, Record), <<"put">>, undefined, Record:make_json()),
 	{reply, {text, jsx:to_json(Frame)}, Req, State};
 
+websocket_info({map_event, {delete, rpgb_rec_zone, Id}}, Req, State) ->
+	lists:map(fun(BinType) ->
+		Frame = make_frame(BinType, Id, <<"delete">>, undefined, undefined),
+		BinFrame = jsx:to_json(Frame),
+		self() ! {send, BinFrame}
+	end, [<<"aura">>, <<"zone">>, <<"scenery">>]),
+	{ok, Req, State};
+
 websocket_info({map_event, {delete, Type, Id}}, Req, State) ->
 	?debugMsg("map delete event"),
 	lager:info("delete event of ~p ~p", [Type, Id]),

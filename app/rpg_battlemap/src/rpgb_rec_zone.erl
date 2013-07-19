@@ -5,7 +5,7 @@
 -include("rpg_battlemap.hrl").
 
 -export([make_json/1, make_json/2]).
--export([delete/1, append/2]).
+-export([delete/1, delete/2, append/2]).
 -export([validate/2]).
 
 make_json(Zone) ->
