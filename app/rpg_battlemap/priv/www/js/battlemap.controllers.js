@@ -196,6 +196,35 @@ Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 			console.error('could not save zone', fail);
 		});
 	};
+
+	$scope.setToolOverride = function(zone, ev){
+		if(zone != $scope.zones.selected){
+			return;
+		}
+		if(ev.overrideTool){
+			return;
+		}
+		var dragData = {};
+		var override = {
+			'grid_mousedown': function(origin, ev, cellX, cellY){
+				dragData.lastX = $rootScope.nearest(zone.x - cellX, 2);
+				dragData.lastY = $rootScope.nearest(zone.y - cellY, 2);
+			},
+			'grid_mousemove': function(origin, ev, cellX, cellY){
+				zone.x = $rootScope.nearest(cellX + dragData.lastX, 2);
+				zone.y = $rootScope.nearest(cellY + dragData.lastY, 2);
+				var defer = zone.$save();
+				defer.then(function(success){
+					$rootScope.$broadcast('zone_moved', zone);
+				},
+				function(fail){
+					console.log('zone move failed', fail);
+				})
+			}
+		};
+		ev.overrideTool = override;
+	};
+
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
@@ -481,6 +510,99 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 
 });
 
+Controllers.controller("EditZoneCtrl", function($scope, $rootScope, Tool){
+	$scope.zone = null;
+	$scope.points = [];
+
+	$scope.$watch('Zones.models.selected', function(newVal){
+		$scope.zone = newVal;
+		if(! $scope.zone){
+			$scope.points = [];
+			return;
+		}
+
+		var zone = $scope.zone;
+		setPoints(zone);
+	});
+
+	var setPoints = function(zone){
+		switch($scope.zone.shape){
+			case "rect":
+				$scope.points = [
+					{x: zone.x, y:zone.y},
+					{x: zone.x + zone.width, y:zone.y},
+					{x: zone.x, y:zone.y + zone.height},
+					{x: zone.x + zone.width, y:zone.y + zone.height}
+				];
+				break;
+		}
+	};
+
+	$scope.$on('zone_moved', function(ev, zone){
+		if($scope.zone && zone == $scope.zone){
+			setPoints(zone);
+		}
+	});
+
+	$scope.movingPoint = function(point, ev){
+		console.log('moving point!', point, ev);
+		var movingPoint = point;
+		var points = $scope.points;
+		var anchored = null;
+		var syncX = null;
+		var syncY = null;
+		var indexOf = $scope.points.indexOf(point);
+		switch(indexOf){
+			case 0:
+				anchored = points[3];
+				syncX = points[2];
+				syncY = points[1];
+				break;
+			case 1:
+				anchored = points[2];
+				syncX = points[3];
+				syncY = points[0];
+				break;
+			case 2:
+				anchored = points[1];
+				syncX = points[0];
+				syncY = points[3];
+				break;
+			case 3:
+				anchored = points[0];
+				syncX = points[1];
+				syncY = points[2];
+		}
+
+		var resizeZone = function(){
+			console.log('resizing zone', movingPoint, anchored);
+			var width = Math.abs(movingPoint.x - anchored.x);
+			var height = Math.abs(movingPoint.y - anchored.y);
+			var x = movingPoint.x < anchored.x ? movingPoint.x : anchored.x;
+			var y = movingPoint.y < anchored.y ? movingPoint.y : anchored.y;
+			$scope.zone.x = x;
+			$scope.zone.y = y;
+			$scope.zone.width = width;
+			$scope.zone.height = height;
+			$scope.zone.$save();
+			syncX.x = movingPoint.x;
+			syncY.y = movingPoint.y;
+		};
+
+		var override = {
+			'grid_mousemove': function(origin, ev, cellX, cellY){
+				movingPoint.x = $rootScope.nearest(cellX, 2);
+				movingPoint.y = $rootScope.nearest(cellY, 2);
+				resizeZone();
+			}
+		};
+		if(ev.overrideTool){
+			return;
+		}
+		ev.overrideTool = override;
+	}
+});
+
 Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 	$scope.currentTool = Tool.currentTool;
 
@@ -501,6 +623,9 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 			}
 			if(overrideTool.grid_mousedown){
 				overrideTool.grid_mousedown(origin, ev, cellX, cellY);
+				return;
+			}
+			if(ev.overrideTool){
 				return;
 			}
 
