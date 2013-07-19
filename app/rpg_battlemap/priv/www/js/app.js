@@ -349,6 +349,7 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 
 		$rootScope.translate = {x:0,y:0};
 		$rootScope.scale = 1;
+		$rootScope.CELL_SIZE = 32;
 
 		$rootScope.transform = function(n, trans){
 			return (n + trans) * $rootScope.scale;
@@ -360,6 +361,16 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 
 		$rootScope.transformY = function(n){
 			return $rootScope.transform(n, $rootScope.translate.y);
+		};
+
+		$rootScope.dimensionToCell = function(d, pan){
+			return ( (d - pan) / $rootScope.scale) / $rootScope.CELL_SIZE;
+		};
+
+		$rootScope.pixelsToCells = function(pixelX, pixelY){
+			var cellX = $rootScope.dimensionToCell(pixelX, $rootScope.translate.x);
+			var cellY = $rootScope.dimensionToCell(pixelY, $rootScope.translate.y);
+			return [cellX, cellY];
 		};
 
 	});

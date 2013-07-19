@@ -707,41 +707,31 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 		panning: false
 	};
 
-	var dimensionToCell = function(d, pan){
-		return ( (d - pan) / $scope.scale) / CELL_SIZE;
-	};
-
-	var pixelsToCells = function(pixelX, pixelY){
-		var cellX = dimensionToCell(pixelX, $scope.translate.x);
-		var cellY = dimensionToCell(pixelY, $scope.translate.y);
-		return [cellX, cellY];
-	};
-
 	$scope.mouseDown = function(ev){
-		xy = pixelsToCells(ev.layerX, ev.layerY),
+		xy = $rootScope.pixelsToCells(ev.layerX, ev.layerY),
 		$rootScope.$broadcast('grid_mousedown', ev, xy[0], xy[1]);
 	};
 
 	$scope.mouseUp = function(ev){
-		xy = pixelsToCells(ev.layerX, ev.layerY);
+		xy = $rootScope.pixelsToCells(ev.layerX, ev.layerY);
 		$rootScope.$broadcast('grid_mouseup', ev, xy[0], xy[1]);
 	};
 
 	$scope.mouseMove = function(ev){
-		xy = pixelsToCells(ev.layerX, ev.layerY);
+		xy = $rootScope.pixelsToCells(ev.layerX, ev.layerY);
 		$rootScope.$broadcast('grid_mousemove', ev, xy[0], xy[1]);
 	};
 
 	$scope.zoom = function(ev){
 		//console.log('der zoom', ev, arguments);
-		var newZoom = $scope.scale - ev.deltaY
-		$scope.scale += ev.deltaY;
+		var newZoom = $rootScope.scale - ev.deltaY
+		$rootScope.scale += ev.deltaY;
 		if(newZoom < 0.1){
 			newZoom = 0.1;
 		} else if(newZoom > 3){
 			newZoom = 3
 		}
-		$scope.scale = newZoom;
+		$rootScope.scale = newZoom;
 		ev.preventDefault();
 		return false;
 	}
