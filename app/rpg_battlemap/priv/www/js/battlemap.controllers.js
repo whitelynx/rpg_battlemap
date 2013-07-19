@@ -396,6 +396,11 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 	$scope.name = "Blocking Terrain";
 	$scope.shape = 'rect';
 	$scope.shapes = ['rect'];
+	$scope.fill_color = 'green';
+	$scope.fill_opacity = 1;
+	$scope.stroke_color = 'black';
+	$scope.stroke_width = 5;
+	$scope.stroke_opacity = '1';
 
 	$scope.$on('grid_toolchange', function(ev, newTool){
 		$scope.toolName = newTool.name;
@@ -451,7 +456,12 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 				var newZone = {
 					name:name,
 					shape: $scope.shape,
-					layer_id: layer.id
+					layer_id: layer.id,
+					stroke_color: $scope.stroke_color,
+					stroke_width: $scope.stroke_width,
+					stroke_opacity: $scope.stroke_opacity,
+					fill_color: $scope.fill_color,
+					fill_opacity: $scope.fill_opacity
 				};
 
 				if($scope.shape == 'rect'){
