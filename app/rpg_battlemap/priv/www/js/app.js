@@ -107,26 +107,22 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 
 		var onMessage = function(ev){
 			var messageObj = JSON.parse(ev.data);
-			console.log('messageObj', messageObj);
 			if(messageObj.type == 'reply'){
 				maybeReply(messageObj);
 				return;
 			}
 			var eventName = messageObj.action + '_' + messageObj.type;
 			var emitData = messageObj.action == 'delete' ? messageObj.type_id : messageObj.data;
-			console.log('emitting', eventName);
 			$rootScope.$emit(eventName, emitData);
 		};
 
 		var maybeReply = function(reply){
-			console.log('maybe reply', reply);
 			if(! reply.type_id){
 				return;
 			}
 			if(requests.hasOwnProperty(reply.type_id)){
 				var defer = requests[reply.type_id].defer;
 				if(reply.accepted){
-					console.log('reply thing', reply.data);
 					defer.resolve(reply.data);
 				} else {
 					defer.reject(reply.data);
@@ -349,6 +345,21 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 				return Math.floor(i);
 			}
 			return Math.floor(i * fractions) / fractions;
+		};
+
+		$rootScope.translate = {x:0,y:0};
+		$rootScope.scale = 1;
+
+		$rootScope.transform = function(n, trans){
+			return (n + trans) * $rootScope.scale;
+		};
+
+		$rootScope.transformX = function(n){
+			return $rootScope.transform(n, $rootScope.translate.x);
+		};
+
+		$rootScope.transformY = function(n){
+			return $rootScope.transform(n, $rootScope.translate.y);
 		};
 
 	});

@@ -26,7 +26,7 @@
 
               <g ng-repeat="zone in zones" ng-show="layer.id == zone.layer_id">
 
-                <g ng-switch="zone.type">
+                <g ng-switch="zone.shape">
                   <rect ng-switch-when="rect" fill="red" x="10" y="20" width="60" height="80" />
                 </g>
 

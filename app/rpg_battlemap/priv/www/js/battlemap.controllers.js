@@ -394,6 +394,54 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 
 Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 	$scope.name = "Blocking Terrain";
+	$scope.shape = 'rect';
+	$scope.shapes = ['rect'];
+
+	$scope.$on('grid_toolchange', function(ev, newTool){
+		$scope.toolName = newTool.name;
+	});
+
+	$scope.setTool = function(){
+		var makeAddZoneTool = function(def){
+			def.name = 'Add Zone';
+			def.grid_mousedown = function(origin, ev, cellX, cellY){
+
+				var layerId = null;
+				if($rootScope.Layers.models.selected){
+					layerId = $rootScope.Layers.models.selected.id;
+				} else {
+					layerId = $rootScope.Layers.models.reduceRight(function(red, layer){
+						if(layer.visible){
+							return red || layer.id;
+						}
+					}, layerId)
+				}
+
+				var newZone = {
+					name:$scope.name,
+					shape: $scope.shape,
+					layer_id: layerId
+				};
+
+				if($scope.shape == 'rect'){
+					newZone.x = $rootScope.nearest(cellX, 2);
+					newZone.y = $rootScope.nearest(cellY, 2);
+					newZone.width = 1;
+					newZone.height = 1;
+				}
+				var defer = $scope.Zones.create(newZone);
+				defer.then(function(success){
+					console.log('created new zone', success);
+				},
+				function(fail){
+					console.log('could not create new zone', fail);
+				});
+			}
+			return def;
+		}
+		Tool(makeAddZoneTool);
+	};
+
 });
 
 Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
@@ -542,18 +590,6 @@ Controllers.controller("MeasureToolCtrl", function($scope, $rootScope, Tool){
 
 	$scope.midy = function(){
 		return $scope.mid('y');
-	};
-
-	$scope.transform = function(n, trans){
-		return (n + trans) * $scope.scale;
-	};
-
-	$scope.transformX = function(n){
-		return $scope.transform(n, $scope.translate.x);
-	};
-
-	$scope.transformY = function(n){
-		return $scope.transform(n, $scope.translate.y);
 	};
 
 	$scope.startX = function(){
