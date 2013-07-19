@@ -73,7 +73,7 @@ websocket_info({map_event, {update, Record}}, Req, State) ->
 
 websocket_info({map_event, {new, Record}}, Req, State) ->
 	?debugMsg("map new event"),
-	Frame = make_frame(element(1, Record), element(2, Record), <<"put">>, undefined, Record:make_json()),
+	Frame = make_frame(Record, element(2, Record), <<"put">>, undefined, Record:make_json()),
 	{reply, {text, jsx:to_json(Frame)}, Req, State};
 
 websocket_info({map_event, {delete, Type, Id}}, Req, State) ->
@@ -168,6 +168,12 @@ make_frame(Type, Id, Action, Accepted, Data) ->
 	Json4 = maybe_add_data(Data, Json3),
 	[{<<"action">>, Action} | Json4].
 
+maybe_add_type(Type, Json) when is_record(Type, rpgb_rec_zone) ->
+	Type2 = list_to_binary(atom_to_list(Type#rpgb_rec_zone.type)),
+	maybe_add_type(Type2, Json);
+maybe_add_type(Tuple, Json) when is_tuple(Tuple) ->
+	Type2 = element(1, Tuple),
+	maybe_add_type(Type2, Json);
 maybe_add_type(rpgb_rec_battlemap, Json) ->
 	[{<<"type">>, <<"map">>} | Json];
 maybe_add_type(Type, Json) when is_binary(Type) ->
@@ -176,6 +182,8 @@ maybe_add_type(rpgb_rec_layer, Json) ->
 	[{<<"type">>, <<"layer">>} | Json];
 maybe_add_type(rpgb_rec_combatant, Json) ->
 	[{<<"type">>, <<"combatant">>} | Json];
+maybe_add_type(Type, Json) when is_binary(Type) ->
+	[{<<"type">>, Type} | Json];
 maybe_add_type(Huh, Json) ->
 	?debugFmt("I don't understand the type ~p", [Huh]),
 	Json.
@@ -426,6 +434,116 @@ dispatch(Req, State, From, <<"post">>, <<"combatant">>, undefined, Json) ->
 
 dispatch(Req, State, From, <<"post">>, <<"combatant">>, _Id, _Json) ->
 	Reply = make_reply(From, false, <<"invalid action">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, Action, Type, Id, Json) when Type =:= <<"aura">>; Type =:= <<"zone">>; Type =:= <<"scenery">> ->
+	Mode = list_to_atom(binary_to_list(Type)),
+	dispatch(Req, State, From, Action, {rpgb_rec_zone, Mode}, Id, Json);
+
+dispatch(Req, State, From, <<"post">>, {rpgb_rec_zone, Mode}, undefined, Json) ->
+	MapId = State#state.map#rpgb_rec_battlemap.id,
+	Reply = case lists:keytake(<<"layer_id">>, 1, Json) of
+		{value, {<<"layer_id">>, LayerId}, Json2} ->
+			case rpgb_data:get_by_id(rpgb_rec_layer, LayerId) of
+				{ok, #rpgb_rec_layer{battlemap_id = MapId} = Layer} ->
+					BaseRec = #rpgb_rec_zone{layer_id = LayerId, name = <<>>, type = Mode, created = os:timestamp(), updated = os:timestamp()},
+					case rpgb_rec_zone:validate(Json2, BaseRec) of
+						{ok, {_, Rec}} ->
+							{ok, Rec2} = rpgb_data:save(Rec),
+							{ok, Layer2} = rpgb_rec_zone:append(Layer, Rec2),
+							OutJson = rpgb_rec_zone:make_json(Rec2),
+							make_reply(From, true, OutJson);
+						{error, {invalid, Txt}} ->
+							make_reply(From, false, Txt)
+					end;
+				_ ->
+					make_reply(From, false, <<"invalid layer id given">>)
+			end;
+		_ ->
+			make_reply(From, false, <<"invalid layer id given">>)
+	end,
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"post">>, {rpgb_rec_zone, _Mode}, _Id, _Json) ->
+	Reply = make_reply(From, false, <<"invalid action">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"put">>, {rpgb_rec_zone, _Mode}, undefined, _Json) ->
+	Reply = make_reply(From, false, <<"invalid action">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"put">>, {rpgb_rec_zone, Mode}, Id, Json) ->
+	Reply = case rpgb_data:search(rpgb_rec_zone, [{id, Id}, {type, Mode}]) of
+		{ok, []} ->
+			make_reply(From, false, <<"not found">>);
+		{ok, [Zone | _]} ->
+			case rpgb_rec_zone:validate(Json, Zone) of
+				{ok, {_, Rec}} ->
+					{ok, Rec2} = rpgb_data:save(Rec),
+					make_reply(From, true, rpgb_rec_zone:make_json(Rec2));
+				{error, {invalid, Txt}} ->
+					make_reply(From, false, Txt)
+			end
+	end,
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"delete">>, {rpgb_rec_zone, _Mode}, undefined, _Json) ->
+	Reply = make_reply(From, false, <<"invalid action">>),
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"delete">>, {rpgb_rec_zone, Mode}, Id, Json) ->
+	Reply = case rpgb_data:search(rpgb_rec_zone, [{id, Id}, {type, Mode}]) of
+		{ok, []} ->
+			make_reply(From, false, <<"not found">>);
+		{ok, [Zone | _]} ->
+			MapId = State#state.map#rpgb_rec_battlemap.id,
+			case rpgb_data:get_by_id(rpgb_rec_layer, Zone#rpgb_rec_zone.layer_id) of
+				{ok, #rpgb_rec_layer{battlemap_id = MapId} = Layer} ->
+					rpgb_rec_zone:delete(Zone, Layer),
+					make_reply(From, true, <<>>);
+				_ ->
+					make_reply(From, false, <<"not found">>)
+			end
+	end,
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"get">>, {rpgb_rec_zone, Mode}, undefined, Json) ->
+	Reply = case proplists:get_value(<<"layer_id">>, Json) of
+		undefined ->
+			make_reply(From, false, <<"not found">>);
+		LayerId ->
+			MapId = State#state.map#rpgb_rec_battlemap.id,
+			case rpgb_data:get_by_id(rpgb_rec_layer, LayerId) of
+				{ok, #rpgb_rec_layer{battlemap_id = MapId} = Layer} ->
+					IdList = case Mode of
+						aura -> Layer#rpgb_rec_layer.aura_ids;
+						zone -> Layer#rpgb_rec_layer.zone_ids;
+						scenery -> Layer#rpgb_rec_layer.scenery_ids
+					end,
+					OutJson = lists:map(fun(Id) ->
+						{ok, Z} = rpgb_data:get_by_id(rpgb_rec_zone, Id),
+						rpgb_rec_zone:make_json(Z)
+					end, IdList),
+					make_reply(From, true, OutJson);
+				_ ->
+					make_reply(From, false, <<"not found">>)
+			end
+	end,
+	{reply, {text, Reply}, Req, State};
+
+dispatch(Req, State, From, <<"get">>, {rpgb_rec_zone, Mode}, Id, _Json) ->
+	Reply = case rpgb_data:get_by_id(rpgb_rec_zone, Id) of
+		{ok, #rpgb_rec_zone{type = Mode} = Zone} ->
+			MapId = State#state.map#rpgb_rec_battlemap.id,
+			case rpgb_data:get_by_id(rpgb_rec_layer, Zone#rpgb_rec_zone.layer_id) of
+				{ok, #rpgb_rec_layer{battlemap_id = MapId}} ->
+					make_reply(From, true, rpgb_rec_zone:make_json(Zone));
+				_ ->
+					make_reply(From, false, <<"not found">>)
+			end;
+		_ ->
+			make_reply(From, false, <<"not found">>)
+	end,
 	{reply, {text, Reply}, Req, State};
 
 dispatch(Req, State, From, Action, Type, Id, Data) ->

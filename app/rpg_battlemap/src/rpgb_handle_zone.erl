@@ -181,7 +181,7 @@ from_json(Req, #ctx{rec = undefined} = Ctx) ->
 	case rpgb_rec_zone:validate(Term, InitialZone) of
 		{ok, {_Json, Rec}} ->
 			{ok, Rec2} = rpgb_data:save(Rec),
-			{ok, Layer2} = insert_zone(Layer, Rec2),
+			{ok, Layer2} = rpgb_rec_zone:append(Layer, Rec2),
 			Ctx2 = Ctx#ctx{layer = Layer2, rec = Rec2},
 			Location = make_location(Req1, Ctx2),
 			{OutBody, Req3, Ctx3} = to_json(Req1, Ctx2),
@@ -237,12 +237,3 @@ make_json(Ctx) ->
 	MapId = Map#rpgb_rec_battlemap.id,
 	rpgb_rec_zone:make_json(Rec, MapId).
 
-insert_zone(Layer, #rpgb_rec_zone{type = aura, id = Id}) ->
-	Ids = Layer#rpgb_rec_layer.aura_ids ++ [Id],
-	rpgb_data:save(Layer#rpgb_rec_layer{aura_ids = Ids});
-insert_zone(Layer, #rpgb_rec_zone{type = zone, id = Id}) ->
-	Ids = Layer#rpgb_rec_layer.zone_ids ++ [Id],
-	rpgb_data:save(Layer#rpgb_rec_layer{zone_ids = Ids});
-insert_zone(Layer, #rpgb_rec_zone{type = scenery, id = Id}) ->
-	Ids = Layer#rpgb_rec_layer.scenery_ids ++ [Id],
-	rpgb_data:save(Layer#rpgb_rec_layer{scenery_ids = Ids}).

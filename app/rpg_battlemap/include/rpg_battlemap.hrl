@@ -52,6 +52,11 @@
 	updated :: time()
 }).
 
+-record(rpgb_point, {
+	x = 0 :: float(),
+	y = 0 :: float()
+}).
+
 -record(rpgb_rec_zone, {
 	id :: 'undefined' | pos_integer(),
 	name :: binary(),
@@ -63,8 +68,29 @@
 	stroke_opacity = 1 :: float(),
 	fill_color = <<"green">> :: binary(),
 	fill_opacity = 1 :: float(),
-	element_type = 'rect' :: 'rect' | 'circle' | 'ellipse' | 'line' | 'polyline' | 'polygon' | 'path',
-	element_attrs = [] :: [keyval()],
+	shape = 'rect' :: 'rect' | 'circle' | 'ellipse' | 'line' | 'polyline' | 'polygon' | 'path',
+	% polygon, polyline
+	points = [] :: [#rpgb_point{}],
+	% rect
+	x :: float(),
+	y :: float(),
+	width :: float(),
+	height :: float(),
+	% rect, ellipse
+	rx :: float(),
+	ry :: float(),
+	% circle, ellipse
+	cx :: float(),
+	cy :: float(),
+	% cirlce
+	r :: float(),
+	% line
+	x1 :: float(),
+	y1 :: float(),
+	x2 :: float(),
+	y2 :: float(),
+	% path nyi fully.
+	d,
 	created :: time(),
 	updated :: time()
 }).

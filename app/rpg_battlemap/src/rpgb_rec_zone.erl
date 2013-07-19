@@ -5,7 +5,7 @@
 -include("rpg_battlemap.hrl").
 
 -export([make_json/1, make_json/2]).
--export([delete/1]).
+-export([delete/1, append/2]).
 -export([validate/2]).
 
 make_json(Zone) ->
@@ -16,12 +16,7 @@ make_json(Zone, MapId) ->
 	Path = iolist_to_binary(io_lib:format("maps/~p/layers/~p/~s/~p", [
 		MapId, Zone#rpgb_rec_zone.layer_id, url_name(Zone#rpgb_rec_zone.type), Zone#rpgb_rec_zone.id])),
 	Url = rpgb:get_url(Path),
-	Zone:to_json([{url, Url}, type, {null_is_undefined}, fun fix_attrs/2]).
-
-fix_attrs(Json, #rpgb_rec_zone{element_attrs = []}) ->
-	lists:keystore(<<"element_attrs">>, 1, Json, {<<"element_attrs">>, [{}]});
-fix_attrs(Json, _Rec) ->
-	Json.
+	Zone:to_json([{url, Url}, type, {null_is_undefined}]).
 
 delete(#rpgb_rec_zone{layer_id = Lid} = Zone) ->
 	case rpgb_data:get_by_id(rpgb_rec_layer, Lid) of
@@ -43,6 +38,16 @@ delete(Zone, Layer) ->
 	Layer2 = remove_from_layer(Zone, Layer),
 	rpgb_data:delete(Zone),
 	Layer2.
+
+append(Layer, #rpgb_rec_zone{type = aura, id = Id}) ->
+	Ids = Layer#rpgb_rec_layer.aura_ids ++ [Id],
+	rpgb_data:save(Layer#rpgb_rec_layer{aura_ids = Ids});
+append(Layer, #rpgb_rec_zone{type = zone, id = Id}) ->
+	Ids = Layer#rpgb_rec_layer.zone_ids ++ [Id],
+	rpgb_data:save(Layer#rpgb_rec_layer{zone_ids = Ids});
+append(Layer, #rpgb_rec_zone{type = scenery, id = Id}) ->
+	Ids = Layer#rpgb_rec_layer.scenery_ids ++ [Id],
+	rpgb_data:save(Layer#rpgb_rec_layer{scenery_ids = Ids}).
 
 validate(Json, InitialZone) ->
 	ValidateFuns = [
