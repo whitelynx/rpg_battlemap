@@ -126,31 +126,6 @@ check_named_zone({Json, #rpgb_rec_zone{name = undefined}}) ->
 check_named_zone(In) ->
 	{ok, In}.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 url_name(aura) -> "auras";
 url_name(zone) -> "zones";
 url_name(scenery) -> "scenery".
