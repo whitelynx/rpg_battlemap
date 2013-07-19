@@ -101,6 +101,28 @@ handle_event({_NotDelete, #rpgb_rec_combatant{battlemap_id = MapId} = Combatant}
 	tell_consumers(State#state.consumers, Msg),
 	{ok, State#state{combatants = Combatants}};
 
+handle_event({delete, rpgb_rec_zone, ZoneId} = Msg, State) ->
+	Zones = State#state.zones,
+	case lists:delete(ZoneId, Zones) of
+		Zones ->
+			lager:info("ingoring delete request of zone ~p", [ZoneId]),
+			{ok, State};
+		Zones1 ->
+			tell_consumers(State#state.consumers, Msg),
+			{ok, State#state{zones = Zones1}}
+	end;
+
+handle_event({_NotDelete, Zone} = Msg, State) ->
+	#rpgb_rec_zone{layer_id = LayerId, id = ZoneId} = Zone,
+	case lists:member(LayerId, State#state.layers) of
+		false ->
+			{ok, State};
+		true ->
+			Zones2 = ordsets:add_element(ZoneId, State#state.zones),
+			tell_consumers(State#state.consumers, Msg),
+			{ok, State#state{zones = Zones2}}
+	end;
+
 %handle_event({new, Map}, State) when is_record(Map, rpgb_rec_battlemap) ->
 %	{ok, State}.
 
