@@ -484,7 +484,7 @@ dispatch(Req, State, From, <<"put">>, {rpgb_rec_zone, Mode}, Id, Json) ->
 				{ok, {_, Rec}} ->
 					{ok, Rec2} = rpgb_data:save(Rec),
 					make_reply(From, true, rpgb_rec_zone:make_json(Rec2));
-				{error, {invalid, Txt}} ->
+				{error, {_ErrAtom, Txt}} ->
 					make_reply(From, false, Txt)
 			end
 	end,
