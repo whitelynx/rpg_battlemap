@@ -102,7 +102,6 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 					defer.reject(error);
 				})
 			}
-			console.log('the defer', defer);
 			return defer.promise;
 		}
 
@@ -330,10 +329,27 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 
 		$rootScope.Layers = SocketResource('layer');
 		$rootScope.Combatants = SocketResource('combatant');
+		$rootScope.Zones = SocketResource('zone');
+		$rootScope.Auras = SocketResource('aura');
+		$rootScope.Scenery = SocketResource('scenery');
 
 		$rootScope.stopPropagation = function(ev){
 			ev.stopPropagation();
-		}
+		};
+
+		$rootScope.nearest = function(i, fractions){
+			if(! fractions){
+				return Math.round(i);
+			}
+			return Math.round(i * fractions) / fractions;
+		};
+
+		$rootScope.contained = function(i, fractions){
+			if(! fractions){
+				return Math.floor(i);
+			}
+			return Math.floor(i * fractions) / fractions;
+		};
 
 	});
 

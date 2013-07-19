@@ -112,7 +112,31 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 	$scope.selectCombatant = function(combatant, ev){
 		$scope.combatants.selected = combatant;
 		if(ev){
-			ev.combatant = combatant;
+			var dragData = {};
+			var moveCombatantOverride = {
+				'grid_mousedown':function(_origin, _ev, cellX, cellY){
+					if(isNaN(combatant.x)){
+						combatant.x = 0;
+					}
+					if(isNaN(combatant.y)){
+						combatant.y = 0;
+					}
+					dragData.lastX = combatant.x - Math.floor(cellX);
+					dragData.lastY = combatant.y - Math.floor(cellY);
+					console.log('mouse down', dragData, combatant);
+				},
+				'grid_mousemove': function(_origin, _ev, cellX, cellY){
+					combatant.x = Math.floor(cellX) + dragData.lastX;
+					combatant.y = Math.floor(cellY) + dragData.lastY;
+					combatant.$save();
+					console.log('mousemove', dragData);
+				}
+			};
+			if(ev.overrideTool){
+				console.log('override tool already in place');
+				return;
+			}
+			ev.overrideTool = moveCombatantOverride;
 		}
 	};
 
@@ -138,6 +162,40 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 		})
 	};
 
+});
+
+Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
+	$scope.zones = $rootScope.Zones.models;
+
+	$scope.removeZone = function(zone){
+		var defer = zone.$delete();
+		defer.then(function(success){
+			if($scope.zones.selected == zone){
+				$scope.zones.selected = null;
+			}
+			return true;
+		},
+		function(fail){
+			console.error('could not delete zone', fail);
+		});
+	};
+
+	$scope.selectZone = function(zone, ev){
+		$scope.zones.selected = zone;
+		if(ev){
+			ev.grid_captor = zone;
+		}
+	};
+
+	$scope.saveZone = function(ev, zone){
+		var defer = zone.$save();
+		defer.then(function(success){
+			return true;
+		},
+		function(fail){
+			console.error('could not save zone', fail);
+		});
+	};
 });
 
 Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
@@ -334,6 +392,10 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 	};
 });
 
+Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
+	$scope.name = "Blocking Terrain";
+});
+
 Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 	$scope.currentTool = Tool.currentTool;
 
@@ -343,33 +405,42 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 
 	var makePanTool = function(def){
 		var dragData = {};
+		var mouseDown = false;
+		var overrideTool = false;
 		def.name = 'Pan Map';
+
 		def.grid_mousedown = function(origin, ev, cellX, cellY){
-			if(ev.combatant){
-				dragData.lastX = ev.combatant.x - Math.floor(cellX);
-				dragData.lastY = ev.combatant.y - Math.floor(cellY);
-				dragData.combatant = ev.combatant;
-				dragData.panning = true;
+			mouseDown = true;
+			if(ev.overrideTool){
+				overrideTool = ev.overrideTool;
+			}
+			if(overrideTool.grid_mousedown){
+				overrideTool.grid_mousedown(origin, ev, cellX, cellY);
 				return;
 			}
+
 			dragData.lastX = ev.pageX;
 			dragData.lastY = ev.pageY;
-			dragData.panning = true;
-			dragData.combatant = false;
+			mouseDown = true;
+			overrideTool = false;
 			console.log('pan map mousedown', ev.combatant, origin, ev);
 		};
 		def.grid_mouseup = function(origin, ev){
-			dragData.panning = false;
-			dragData.combatant = false;
+			if(overrideTool && overrideTool.grid_mouseup){
+				overrideTool.grid_mouseup(origin, ev);
+			}
+			mouseDown = false;
+			overrideTool = false;
 		};
 		def.grid_mousemove = function(origin, ev, cellX, cellY){
-			if(! dragData.panning){
+			if(! mouseDown){
 				return;
 			}
-			if(dragData.combatant){
-				dragData.combatant.x = Math.floor(cellX) + dragData.lastX;
-				dragData.combatant.y = Math.floor(cellY) + dragData.lastY;
-				dragData.combatant.$save();
+			if(overrideTool && overrideTool.grid_mousemove){
+				overrideTool.grid_mousemove(origin, ev, cellX, cellY);
+				return;
+			}
+			if(! mouseDown){
 				return;
 			}
 			var deltaX = ev.pageX - dragData.lastX;
@@ -380,7 +451,8 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 			$scope.translate.y = $scope.translate.y + deltaY;
 		};
 		def.deselected = function(){
-			dragData.panning = false;
+			overrideTool = false;
+			mouseDown = false;
 		}
 		return def;
 	};
