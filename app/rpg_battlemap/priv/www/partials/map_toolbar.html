@@ -62,7 +62,7 @@
 	</div>
 
 	<div class="btn-group" ng-controller="ListZonesCtrl" ng-show="user == map.owner">
-		<a class="btn btn-small dropdwon-toggle" data-toggle="dropdown" href="#">Zones<span class="caret"></span></a>
+		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Zones<span class="caret"></span></a>
 		<ul class="dropdown-menu">
 
 			<li ng-repeat="zone in zones | filter:zoneIsVisible()">
