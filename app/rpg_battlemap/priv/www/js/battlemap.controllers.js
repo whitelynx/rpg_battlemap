@@ -512,7 +512,6 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 
 Controllers.controller("EditZoneCtrl", function($scope, $rootScope, Tool){
 	$scope.zone = null;
-	$scope.points = [];
 
 	$scope.$watch('Zones.models.selected', function(newVal){
 		$scope.zone = newVal;
@@ -522,11 +521,23 @@ Controllers.controller("EditZoneCtrl", function($scope, $rootScope, Tool){
 		}
 
 		var zone = $scope.zone;
+	});
+});
+
+Controllers.controller("EditRectZoneCtrl", function($scope, $rootScope, Tool){
+	$scope.points = [];
+
+	$scope.$watch('Zones.models.selected', function(zone){
+		if(! zone){
+			$scope.points = [];
+			return;
+		}
+
 		setPoints(zone);
 	});
 
 	var setPoints = function(zone){
-		switch($scope.zone.shape){
+		switch(zone.shape){
 			case "rect":
 				$scope.points = [
 					{x: zone.x, y:zone.y},

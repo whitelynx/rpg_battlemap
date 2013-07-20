@@ -98,18 +98,21 @@
         </g>
 
         <g ng-controller="EditZoneCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
-          <circle
-            ng-repeat="point in points"
-            cx="{{point.x * 32}}"
-            cy="{{point.y * 32}}"
-            r="8"
-            fill="white"
-            stroke="black"
-            stroke-width="4"
-            ng-mousedown="movingPoint(point, $event)"
-          />
+          <g ng-switch="zone.shape">
+            <g ng-switch-when="rect" ng-controller="EditRectZoneCtrl">
+              <circle
+                ng-repeat="point in points"
+                cx="{{point.x * 32}}"
+                cy="{{point.y * 32}}"
+                r="8"
+                fill="white"
+                stroke="black"
+                stroke-width="4"
+                ng-mousedown="movingPoint(point, $event)"
+              />
+            </g>
+          </g>
         </g>
-
 
         <rect x="0" y="0" width="100%" height="100%" stroke-opacity="0"
               fill="url(#gridPattern)" style="pointer-events:none;" id="gridRect"/>
