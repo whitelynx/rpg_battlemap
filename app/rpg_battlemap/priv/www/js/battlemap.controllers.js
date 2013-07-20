@@ -343,9 +343,9 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 
 	$scope.name_base = 'Fight Man';
 	$scope.size = 1;
-	$scope.color = 'green';
+	$scope.color = '#00ff00';
 	$scope.aura_size = 0;
-	$scope.aura_color = 'green';
+	$scope.aura_color = '#009900';
 
 	var makeAddCombatantTool = function(def){
 		def.name = 'Add Combatant';
@@ -443,9 +443,9 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 	$scope.name = "Blocking Terrain";
 	$scope.shape = 'rect';
 	$scope.shapes = ['rect', 'circle'];
-	$scope.fill_color = 'green';
+	$scope.fill_color = '#008800';
 	$scope.fill_opacity = 1;
-	$scope.stroke_color = 'black';
+	$scope.stroke_color = '#000000';
 	$scope.stroke_width = 5;
 	$scope.stroke_opacity = '1';
 
