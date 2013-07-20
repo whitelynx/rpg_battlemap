@@ -125,21 +125,4 @@
 		</ul>
 	</div>
 
-	<div class="btn-group" ng-repeat="button in buttons" ng-show="button.menu != undefined">
-		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">
-			{{ button.name }}
-			<span class="caret"></span>
-		</a>
-
-		<ul class="dropdown-menu">
-			<li><a tabindex="-1" href="#">Action</a></li>
-			<li><a tabindex="-1" href="#">Another action</a></li>
-			<li><a tabindex="-1" href="#">Something else here</a></li>
-			<li class="divider"></li>
-			<li><a tabindex="-1" href="#">Separated link</a></li>
-		</ul>
-	</div>
-
-	<a href="{{ button.url }}" class="btn btn-small {{ button.class }}" ng-repeat="button in buttons" ng-show="button.menu == undefined"><i ng-repeat="icon in button.icons" class="{{ icon }}">&nbsp;</i> {{ button.name }}</a>
-
 </div>
