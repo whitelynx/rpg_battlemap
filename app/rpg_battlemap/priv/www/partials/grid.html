@@ -27,6 +27,7 @@
               <g ng-repeat="zone in zones" ng-show="layer.id == zone.layer_id">
 
                 <g ng-switch="zone.shape">
+
                   <rect ng-switch-when="rect"
                     fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
@@ -38,6 +39,18 @@
                     width="{{zone.width * 32}}"
                     height="{{zone.height * 32}}" 
                     ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <circle ng-switch-when="circle"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    cx="{{zone.cx * 32}}"
+                    cy="{{zone.cy * 32}}"
+                    r="{{zone.r * 32}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
                 </g>
 
               </g>
@@ -99,6 +112,7 @@
 
         <g ng-controller="EditZoneCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
           <g ng-switch="zone.shape">
+
             <g ng-switch-when="rect" ng-controller="EditRectZoneCtrl">
               <circle
                 ng-repeat="point in points"
@@ -111,6 +125,20 @@
                 ng-mousedown="movingPoint(point, $event)"
               />
             </g>
+
+            <g ng-switch-when="circle" ng-controller="EditCircleZoneCtrl">
+              <circle
+                ng-repeat="point in points"
+                cx="{{point.x * 32}}"
+                cy="{{point.y * 32}}"
+                r="8"
+                fill="white"
+                stroke="black"
+                stroke-width="4"
+                ng-mousedown="movingPoint(point, $event)"
+              />
+            </g>
+
           </g>
         </g>
 
