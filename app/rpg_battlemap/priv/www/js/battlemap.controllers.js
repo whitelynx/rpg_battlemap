@@ -197,6 +197,14 @@ Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 		});
 	};
 
+	$scope.pointString = function(zone){
+		return zone.points.map(function(p){
+			var x = p.x * 32;
+			var y = p.y * 32;
+			return x +',' + y;
+		}).join(' ');
+	};
+
 	$scope.setToolOverride = function(zone, ev){
 		if(zone != $scope.zones.selected){
 			return;
@@ -442,7 +450,7 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 	$scope.name = "Blocking Terrain";
 	$scope.shape = 'rect';
-	$scope.shapes = ['rect', 'circle'];
+	$scope.shapes = ['rect', 'circle', 'polyline', 'polygon'];
 	$scope.fill_color = '#008800';
 	$scope.fill_opacity = 1;
 	$scope.stroke_color = '#000000';
@@ -517,10 +525,22 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 						newZone.y = $rootScope.nearest(cellY, 2);
 						newZone.width = 1;
 						newZone.height = 1;
+						break;
 					case 'circle':
 						newZone.cx = $rootScope.nearest(cellX, 2);
 						newZone.cy = $rootScope.nearest(cellY, 2);
 						newZone.r = 0.5;
+						break;
+					case 'polygon':
+					case 'polyline':
+						var nearX = $rootScope.nearest(cellX, 2);
+						var nearY = $rootScope.nearest(cellY, 2);
+						newZone.points = [
+							{x: nearX, y: nearY + 1},
+							{x: nearX, y: nearY},
+							{x: nearX + 1, y: nearY}
+						];
+						break;
 				}
 
 				var defer = $scope.Zones.create(newZone);
@@ -560,6 +580,85 @@ Controllers.controller("EditZoneCtrl", function($scope, $rootScope, Tool){
 		}
 	});
 
+});
+
+Controllers.controller("EditPolyZoneCtrl", function($scope, $rootScope, Tool){
+	$scope.points = [];
+	$scope.midPoints = [];
+
+	$scope.$watch('Zones.models.selected', function(zone){
+		if(! zone){
+			$scope.points = [];
+			return;
+		}
+		$scope.setPoints(zone);
+		$scope.setMidPoints(zone);
+	});
+
+	$scope.setPoints = function(zone){
+		$scope.points = zone.points.map(function(p){
+			return {x: p.x, y: p.y};
+		});
+	};
+
+	$scope.setMidPoints = function(zone){
+		$scope.midPoints = zone.points.map(function(p, ind, arr){
+			var ind = ind - 1;
+			if(ind === -1){
+				ind = arr.length - 1;
+			}
+			var x = (p.x + arr[ind].x) / 2;
+			var y = (p.y + arr[ind].y) / 2;
+			return {'x':x, 'y':y};
+		});
+	}
+
+	$scope.addPoint = function(point, ev){
+		var ind = $scope.midPoints.indexOf(point);
+		point.x = $rootScope.nearest(point.x, 2);
+		point.y = $rootScope.nearest(point.y, 2);
+		$scope.zone.points.splice(ind, 0, point);
+		$scope.points.splice(ind, 0, point);
+		$scope.setMidPoints($scope.zone);
+
+		var moveFunc = function(origin, ev, cellX, cellY){
+			var nearX = $rootScope.nearest(cellX, 2);
+			var nearY = $rootScope.nearest(cellY, 2);
+			$scope.points[ind].x = nearX;
+			$scope.points[ind].y = nearY;
+			$scope.zone.points[ind].x = nearX;
+			$scope.zone.points[ind].y = nearY;
+			$scope.setMidPoints($scope.zone);
+			$scope.zone.$save();
+		};
+
+		var override = {
+			'grid_mousemove': moveFunc
+		};
+
+		ev.overrideTool = override;
+	};
+
+	$scope.movingPoint = function(point, ev){
+		var ind = $scope.points.indexOf(point);
+
+		var moveFunc = function(origin, ev, cellX, cellY){
+			var nearX = $rootScope.nearest(cellX, 2);
+			var nearY = $rootScope.nearest(cellY, 2);
+			$scope.points[ind].x = nearX;
+			$scope.points[ind].y = nearY;
+			$scope.zone.points[ind].x = nearX;
+			$scope.zone.points[ind].y = nearY;
+			$scope.setMidPoints($scope.zone);
+			$scope.zone.$save();
+		};
+
+		var override = {
+			'grid_mousemove': moveFunc
+		};
+
+		ev.overrideTool = override;
+	};
 });
 
 Controllers.controller("EditCircleZoneCtrl", function($scope, $rootScope, Tool){

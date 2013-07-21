@@ -51,6 +51,24 @@
                     r="{{zone.r * 32}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
+                  <polygon ng-switch-when="polygon"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    points="{{pointString(zone)}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <polyline ng-switch-when="polyline"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    points="{{pointString(zone)}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
                 </g>
 
               </g>
@@ -139,6 +157,46 @@
               />
             </g>
 
+            <g ng-switch-when="polyline" ng-controller="EditPolyZoneCtrl">
+              <circle
+                ng-repeat="point in points"
+                cx="{{point.x * 32}}"
+                cy="{{point.y * 32}}"
+                r="8"
+                fill="white"
+                stroke="black"
+                stroke-width="4"
+                ng-mousedown="movingPoint(point, $event)"
+              />
+            </g>
+
+            <g ng-switch-when="polygon" ng-controller="EditPolyZoneCtrl">
+
+              <circle
+                ng-repeat="point in midPoints"
+                cx="{{point.x * 32}}"
+                cy="{{point.y * 32}}"
+                r="8"
+                fill="white"
+                fill-opacity="0.5"
+                stroke="black"
+                stroke-width="4"
+                stroke-opacity="0.5"
+                ng-mousedown="addPoint(point, $event)"
+              />
+
+              <circle
+                ng-repeat="point in points"
+                cx="{{point.x * 32}}"
+                cy="{{point.y * 32}}"
+                r="8"
+                fill="white"
+                stroke="black"
+                stroke-width="4"
+                ng-mousedown="movingPoint(point, $event)"
+              />
+
+            </g>
           </g>
         </g>
 
