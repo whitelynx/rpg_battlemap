@@ -196,6 +196,17 @@
                 ng-mousedown="movingPoint(point, $event)"
               />
 
+              <image
+                ng-repeat="point in points"
+                x="{{ point.x * 32 + 8 }}"
+                y="{{ point.y * 32 - 16 }}"
+                width="8"
+                height="8"
+                xlink:href="/images/red-circle-x.png"
+                ng-mousedown="setPointToRemove(point, $event)"
+                ng-mouseup="removePoint(point, $event)"
+              />
+
             </g>
           </g>
         </g>

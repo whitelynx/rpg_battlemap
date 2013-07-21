@@ -659,6 +659,25 @@ Controllers.controller("EditPolyZoneCtrl", function($scope, $rootScope, Tool){
 
 		ev.overrideTool = override;
 	};
+
+	var pointToRm = -1
+	$scope.setPointToRemove = function(point, ev){
+		$rootScope.stopPropagation(ev);
+		pointToRm = $scope.points.indexOf(point);
+	};
+
+	$scope.removePoint = function(point, ev){
+		$rootScope.stopPropagation(ev);
+		var ind = $scope.points.indexOf(point);
+		if(! (ind === pointToRm) ){
+			return;
+		}
+		$scope.zone.points.splice(ind, 1);
+		$scope.setPoints($scope.zone);
+		$scope.setMidPoints($scope.zone);
+		$scope.zone.$save();
+	};
+
 });
 
 Controllers.controller("EditCircleZoneCtrl", function($scope, $rootScope, Tool){
