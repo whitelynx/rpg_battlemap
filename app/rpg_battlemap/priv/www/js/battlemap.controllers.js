@@ -663,19 +663,25 @@ Controllers.controller("EditPolyZoneCtrl", function($scope, $rootScope, Tool){
 	var pointToRm = -1
 	$scope.setPointToRemove = function(point, ev){
 		$rootScope.stopPropagation(ev);
-		pointToRm = $scope.points.indexOf(point);
+		if($scope.points.length > 2){
+			pointToRm = $scope.points.indexOf(point);
+			return;
+		}
+		pointToRm = -1;
 	};
 
 	$scope.removePoint = function(point, ev){
 		$rootScope.stopPropagation(ev);
 		var ind = $scope.points.indexOf(point);
 		if(! (ind === pointToRm) ){
+			pointToRm = -1;
 			return;
 		}
 		$scope.zone.points.splice(ind, 1);
 		$scope.setPoints($scope.zone);
 		$scope.setMidPoints($scope.zone);
 		$scope.zone.$save();
+		pointToRm = -1;
 	};
 
 });
