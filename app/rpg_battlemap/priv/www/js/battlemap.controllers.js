@@ -307,6 +307,16 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 
 	$scope.noToolbar = false;
 
+	var whenInvitesReady = function(partier){
+		var def = MapSocket.sendRequest('post', 'map', $scope.map.id, {'action':'invite','args':[partier]});
+		def.then(function(success){
+			console.log('invited partier', partier);
+		},
+		function(failed){
+			console.error('failure to invite', failed);
+		});
+	};
+
 	var mapPromise = $rootScope.Map.get($routeParams);
 	mapPromise.$then(function (success) {
 		console.log('map data gotten');
@@ -320,6 +330,7 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 			socketPromise.then(function(success){
 				console.log('der success', success);
 				$scope.map = success;
+				$scope.invite = whenInvitesReady;
 			},
 			function(fail){
 				console.log('failed to get map', fail);
@@ -341,7 +352,11 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 	$scope.mapBackgroundCssObject = function(){
 		var out = {'backgroundColor': $scope.map.background_color};
 		return out;
-	}
+	};
+
+	$scope.invite = function(partier){
+		console.error('not yet ready for invites');
+	};
 });
 
 Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool){

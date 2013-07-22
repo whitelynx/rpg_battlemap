@@ -112,7 +112,7 @@ handle_event({delete, rpgb_rec_zone, ZoneId} = Msg, State) ->
 			{ok, State#state{zones = Zones1}}
 	end;
 
-handle_event({_NotDelete, Zone} = Msg, State) ->
+handle_event({_NotDelete, Zone} = Msg, State) when is_record(Zone, rpgb_rec_zone) ->
 	#rpgb_rec_zone{layer_id = LayerId, id = ZoneId} = Zone,
 	case lists:member(LayerId, State#state.layers) of
 		false ->

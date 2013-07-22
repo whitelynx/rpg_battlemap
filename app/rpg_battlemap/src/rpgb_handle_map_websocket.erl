@@ -255,6 +255,31 @@ dispatch(Req, State, From, <<"delete">>, <<"map">>, _Id, _Json) ->
 	Reply = make_reply(From, false, undefined),
 	{reply, {text, Reply}, Req, State};
 
+dispatch(Req, #state{map = #rpgb_rec_battlemap{owner_id = Owner, id = Id} = Map, user = #rpgb_rec_user{id = Owner}} = State, From, <<"post">>, <<"map">>, Id, Json) ->
+	Action = proplists:get_value(<<"action">>, Json),
+	Args = proplists:get_value(<<"args">>, Json),
+	Reply = case {Action, Args} of
+		{<<"invite">>, [Partier]} when is_binary(Partier) ->
+			case rpgb_rec_user:get_maybe_created(Partier) of
+				{ok, PartierRec} ->
+					case rpgb_rec_battlemap:is_user_participant(PartierRec, State#state.map) of
+						true ->
+							make_reply(From, false, <<"already participant">>);
+						false ->
+							Plist = [PartierRec#rpgb_rec_user.id | State#state.map#rpgb_rec_battlemap.participant_ids],
+							{ok, Map2} = rpgb_data:save(Map#rpgb_rec_battlemap{participant_ids = Plist}),
+							make_reply(From, true, Partier)
+					end;
+				Else ->
+					lager:info("coudn't invite partier ~p", [Else]),
+					make_reply(From, false, iolist_to_binary(io_lib:format("could finish invite: ~p", [Else])))
+			end;
+		_ ->
+			lager:info("not doing action ~p with args ~p", [Action, Args]),
+			make_reply(From, false, <<"invalid posted action or args">>)
+	end,
+	{reply, {text, Reply}, Req, State};
+
 dispatch(Req, State, From, _Action, <<"map">>, _Id, _Json) ->
 	Reply = make_reply(From, false, <<"invalid method">>),
 	{reply, {text, Reply}, Req, State};
