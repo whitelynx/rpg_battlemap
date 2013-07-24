@@ -167,6 +167,11 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 	$scope.zones = $rootScope.Zones.models;
 
+	$scope.$on('selectzone', function(ev, zone) {
+		console.log('selecting zone!');
+		$scope.selectZone(zone);
+	});
+
 	$scope.removeZone = function(zone){
 		var defer = zone.$delete();
 		defer.then(function(success){
@@ -559,8 +564,11 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 				}
 
 				var defer = $scope.Zones.create(newZone);
-				defer.then(function(success){
-					console.log('created new zone', success);
+				defer.then(function(zone){
+					console.log('created new zone', zone);
+
+					// And now, time to select the zone!
+					$rootScope.$broadcast("selectzone", zone);
 				},
 				function(fail){
 					console.log('could not create new zone', fail);
