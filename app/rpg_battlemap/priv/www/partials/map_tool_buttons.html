@@ -1,4 +1,4 @@
-<div class="btn-group" ng-controller="AddZoneToolCtrl">
+<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-show="{{ map.owner == user }}">
 	<button class="btn btn-small" ng-class="{'active':toolName == 'Add Zone'}" ng-click="setTool()">{{ name }}</button>
 	<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" ng-click="setTool()">
 		<span class="caret"></span>
