@@ -49,7 +49,15 @@ table td.shrink {
 }
 
 .selected {
-    box-shadow: inset 0 0 10px blue;
+	color: #fff !important;
+	text-decoration: none;
+	outline: 0;
+	background-color: #0081C2;
+	background-image: -moz-linear-gradient(top, #4DACDB, #3392C2);
+	background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#4DACDB), to(#3392C2));
+	background-image: -webkit-linear-gradient(top, #4DACDB, #3392C2);
+	background-image: -o-linear-gradient(top, #4DACDB, #3392C2);
+	background-image: linear-gradient(to bottom, #4DACDB, #3392C2);
+	background-repeat: repeat-x;
 }
-
 

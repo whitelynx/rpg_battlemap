@@ -15,9 +15,10 @@
 		<ul class="dropdown-menu">
 
 			<li ng-repeat="combatant in combatants" style="clear:both;">
-				<p ng-click="selectCombatant(combatant)" ng-class="{'selected':combatants.selected == combatant}">
+				<a ng-click="selectCombatant(combatant)" ng-class="{'selected':combatants.selected == combatant}">
+					<button type="button" class="close pull-right" ng-click="deleteCombatant($event, combatant)">&times;</button>
 					{{ combatant.name }}
-				</p>
+				</a>
 			</li>
 
 		</ul>
@@ -68,15 +69,16 @@
 		<ul class="dropdown-menu">
 
 			<li ng-repeat="zone in zones | filter:zoneIsVisible()">
-				<p ng-click="selectZone(zone)" ng-class="{'selected':zones.selected == zone}">
+				<a ng-click="selectZone(zone)" ng-class="{'selected':zones.selected == zone}">
+					<button type="button" class="close pull-right" ng-click="removeZone(zone, $event)">&times;</button>
 					{{ zone.name }}
-				</p>
+				</a>
 			</li>
 
 			<li class="divider" ng-show="zones.selected"></li>
 
 			<li>
-				<p ng-click="selectZone(null)" ng-show="zones.selected">Clear Selected</p>
+				<button class="btn text-center" ng-click="selectZone(null)" ng-show="zones.selected">Clear Selected</button>
 			</li>
 
 		</ul>

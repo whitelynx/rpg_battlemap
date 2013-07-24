@@ -1,19 +1,19 @@
 <a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Participants<span class="caret"> </span></a>
 <ul class="dropdown-menu">
-	
+
 	<li ng-repeat="participant in map.participants">
-		<p>
+		<a>
+			<button type="button" ng-show="user == map.owner" class="close pull-right" ng-click="removeParticipant(participant)">&times;</button>
 			{{participant}}
-			<button ng-show="user == map.owner" class="btn btn-small" ng-click="removeParticipant(participant)">X</button>
-		</p>
+		</a>
 	</li>
 
 	<li ng-show="user == map.owner" class="divider"></li>
 
 	<li ng-show="user == map.owner">
-		<p>
-			<input ng-model="new_participant" ng-click="stopPropagation($event)"/><button class="btn btn-small" ng-click="invite(new_participant)">Invite</button>
-		</p>
+		<div class="input-append">
+			<input type="text" ng-model="new_participant" ng-click="stopPropagation($event)" >
+			<button class="btn" type="button" ng-click="invite(new_participant)">Invite</button>
+		</div>
 	</li>
-
 </ul>
