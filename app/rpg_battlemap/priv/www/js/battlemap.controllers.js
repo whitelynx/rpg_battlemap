@@ -1122,8 +1122,10 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 
 	$scope.zoom = function(ev){
 		//console.log('der zoom', ev, arguments);
-		var newZoom = $rootScope.scale - ev.deltaY
-		$rootScope.scale += ev.deltaY;
+		var inc = 0.1
+		var delta = ev.deltaY > 0 ? inc : (-1 * inc);
+		var newZoom = $rootScope.scale - delta;
+		$rootScope.scale += delta;
 		if(newZoom < 0.1){
 			newZoom = 0.1;
 		} else if(newZoom > 3){
