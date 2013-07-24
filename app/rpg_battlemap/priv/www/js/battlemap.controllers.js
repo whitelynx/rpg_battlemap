@@ -52,7 +52,7 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 });
 
 Controllers.controller("ListLayersCtrl", function($scope, $rootScope){
-	console.log('layers list ctrl', $scope, $scope.map.id);
+	//console.log('layers list ctrl', $scope, $scope.map.id);
 
 	$scope.layers = $rootScope.Layers.models;
 
@@ -168,7 +168,6 @@ Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 	$scope.zones = $rootScope.Zones.models;
 
 	$scope.$on('selectzone', function(ev, zone) {
-		console.log('selecting zone!');
 		$scope.selectZone(zone);
 	});
 
@@ -567,8 +566,10 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 				defer.then(function(zone){
 					console.log('created new zone', zone);
 
-					// And now, time to select the zone!
+					// Select the zone, and change our tool
 					$rootScope.$broadcast("selectzone", zone);
+					$rootScope.$broadcast("settool", 'Normal');
+					//$scope.setTool('Normal');
 				},
 				function(fail){
 					console.log('could not create new zone', fail);
@@ -854,6 +855,10 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 		$scope.currentTool = newTool;
 	});
 
+	$scope.$on('settool', function(ev, toolName){
+		$scope.setTool(toolName);
+	});
+
 	var makePanTool = function(def){
 		var dragData = {};
 		var mouseDown = false;
@@ -877,7 +882,7 @@ Controllers.controller("MapToolsCtrl", function($scope, $rootScope, Tool){
 			dragData.lastY = ev.pageY;
 			mouseDown = true;
 			overrideTool = false;
-			console.log('pan map mousedown', ev.combatant, origin, ev);
+			//console.log('pan map mousedown', ev.combatant, origin, ev);
 		};
 		def.grid_mouseup = function(origin, ev){
 			if(overrideTool && overrideTool.grid_mouseup){
