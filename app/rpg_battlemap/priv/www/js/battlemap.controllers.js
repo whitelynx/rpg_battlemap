@@ -290,7 +290,7 @@ Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 	};
 
 	$scope.deleteMap = function(map){
-		var delPromise = Map.delete({mapid: map.id});
+		var delPromise = $rootScope.Map.delete({mapid: map.id});
 		delPromise.$then(function(success){
 			var index = $rootScope.maps.indexOf(map);
 			if(index < 0) {
