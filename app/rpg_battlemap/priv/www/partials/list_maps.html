@@ -2,7 +2,7 @@
 
 <div class="row-fluid">
     <div class="span4">
-        <div class="navbar navbar-header">
+        <div class="navbar navbar-header navbar-small">
             <div class="navbar-inner">
                 <span class="brand"><i class="icon-globe"></i> Participating Maps</span>
             </div>
@@ -10,7 +10,7 @@
 
         <div class="container-fluid">
             <table class="table table-bordered table-striped table-centered">
-                <tr ng-repeat="map in getParticipating(maps)">
+                <tr ng-repeat="map in getParticipating(maps)" ng-show="{{ map.owner != user }}">
                     <td class="expand">
                         <a href="{{ map.url }}">{{ map.name }}</a>
 					</td>
@@ -25,12 +25,9 @@
     </div>
 
     <div class="span4">
-        <div class="navbar navbar-header">
+        <div class="navbar navbar-header navbar-small">
             <div class="navbar-inner">
-                <span class="brand"><i class="icon-heart"></i> My Maps</span>
-				<form class="navbar-form pull-right">
-					<input type="text" class="input-large" ng-model="newMapName"> <button class="btn" ng-click="createMap()">New Map</button>
-				</form>
+                <span class="brand"><i class="icon-compass"></i> My Maps</span>
             </div>
         </div>
         <div class="container-fluid">
@@ -44,16 +41,18 @@
 					</td>
 				</tr>
 			</table>
+			<hr>
+			<div class="input-append" style="width: calc(100% - 85px);">
+				<input type="text" class="input-block-level" placeholder="Map name here..." ng-model="newMapName" ng-click="stopPropagation($event)" >
+				<button class="btn" type="button" ng-click="createMap()">New Map</button>
+			</div>
 		</div>
     </div>
 
     <div class="span4">
-        <div class="navbar navbar-header">
+        <div class="navbar navbar-header navbar-small">
             <div class="navbar-inner">
                 <span class="brand"><i class="icon-user"></i> My characters</span>
-				<form class="navbar-form pull-right">
-					<input type="text" class="input-large"> <button class="btn">New Character</button>
-				</form>
             </div>
         </div>
         <div class="container-fluid">
@@ -68,6 +67,11 @@
 				</tr>
 			</table>
 			<h4 class="text-center" ng-hide="characters">Please add a character.</h4>
+			<hr>
+			<div class="input-append" style="width: calc(100% - 115px);">
+				<input type="text" class="input-block-level" placeholder="Map name here..." ng-model="new_participant" ng-click="stopPropagation($event)" >
+				<button class="btn" type="button" ng-click="invite(new_participant)">New Character</button>
+			</div>
 		</div>
     </div>
 
