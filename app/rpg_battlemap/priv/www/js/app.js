@@ -106,14 +106,16 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		}
 
 		var onMessage = function(ev){
-			var messageObj = JSON.parse(ev.data);
-			if(messageObj.type == 'reply'){
-				maybeReply(messageObj);
-				return;
-			}
-			var eventName = messageObj.action + '_' + messageObj.type;
-			var emitData = messageObj.action == 'delete' ? messageObj.type_id : messageObj.data;
-			$rootScope.$emit(eventName, emitData);
+			$rootScope.$apply(function(){
+				var messageObj = JSON.parse(ev.data);
+				if(messageObj.type == 'reply'){
+					maybeReply(messageObj);
+					return;
+				}
+				var eventName = messageObj.action + '_' + messageObj.type;
+				var emitData = messageObj.action == 'delete' ? messageObj.type_id : messageObj.data;
+				$rootScope.$emit(eventName, emitData);
+			});
 		};
 
 		var maybeReply = function(reply){
