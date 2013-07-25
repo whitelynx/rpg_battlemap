@@ -151,6 +151,10 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 	};
 
 	$scope.deleteCombatant = function(ev, combatant){
+		if(ev){
+			$rootScope.stopPropagation(ev);
+		}
+
 		var defer = combatant.$delete();
 		defer.then(function(success){
 			if($scope.combatants.selected == combatant){
@@ -171,7 +175,11 @@ Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 		$scope.selectZone(zone);
 	});
 
-	$scope.removeZone = function(zone){
+	$scope.removeZone = function(zone, ev){
+		if(ev){
+			$rootScope.stopPropagation(ev);
+		}
+
 		var defer = zone.$delete();
 		defer.then(function(success){
 			if($scope.zones.selected == zone){

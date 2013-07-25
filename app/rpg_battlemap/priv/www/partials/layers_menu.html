@@ -3,21 +3,21 @@
 <ul class="dropdown-menu" ng-controller="ListLayersCtrl">
 
 	<li ng-repeat="layer in layers" style="clear:both;">
-		<p ng-click="selectLayer(layer)" ng-class="{'selected':layers.selected == layer}">
-			<i class="icon-fixed-width icon-border" ng-class="{'icon-eye-open':layer.visible}" ng-click="layer.visible = ! layer.visible"></i>
+		<a ng-click="selectLayer(layer)" ng-class="{'selected':layers.selected == layer}">
+			<i class="icon-fixed-width icon-border" ng-class="{true:'icon-eye-open', false: 'icon-eye-close'}[layer.visible == true]" ng-click="layer.visible = ! layer.visible"></i>
 			{{ layer.name }}
-			<button ng-hide="layers.length < 2" ng-click="removeLayer(layer)" class="pull-right">
-				<i class="icon-remove"></i>
-			</button>
-		</p>
+			<button type="button" class="close pull-right" ng-hide="layers.length < 2" ng-click="removeLayer(layer)">&times;</button>
+		</a>
 	</li>
 
 	<li class="divider"></li>
 
 	<li ng-show="user == map.owner">
 		<label for="layerNewName">New Layer Name</label>
-		<input ng-model="new_layer_name" ng-click="stopPropagation($event)" />
-		<button ng-click="newLayer(new_layer_name)">New</button>
+		<div class="input-append">
+			<input type="text" ng-model="new_layer_name" ng-click="stopPropagation($event)" >
+			<button class="btn" type="button" ng-click="newLayer(new_layer_name)">New</button>
+		</div>
 	</li>
 
 </ul>

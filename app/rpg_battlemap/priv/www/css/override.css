@@ -9,6 +9,7 @@
     min-height: 20px;
     font-size: 15px;
     line-height: 14px;
+	padding-bottom: 2px;
 }
 
 .navbar.navbar-small .brand
@@ -58,3 +59,13 @@ table.table-centered td
 	vertical-align: middle;
 }
 
+
+.dropdown-menu a
+{
+	white-space: nowrap;
+}
+
+button.close
+{
+	margin-left: 10px;
+}
