@@ -75,7 +75,17 @@
 	</div>
 
 	<div class="btn-group" ng-controller="ListZonesCtrl" ng-show="user == map.owner">
-		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Zones<span class="caret"></span></a>
+
+		<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">Zones</button>
+
+		<button class="btn btn-small" ng-show="zones.selected" ng-click="selectZone(null)">
+			<span class="icon-eject"> </span>
+		</button>
+
+		<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+			<span class="caret"></span>
+		</button>
+
 		<ul class="dropdown-menu">
 
 			<li ng-repeat="zone in zones | filter:zoneIsVisible()">
@@ -83,12 +93,6 @@
 					<button type="button" class="close pull-right" ng-click="removeZone(zone, $event)">&times;</button>
 					{{ zone.name }}
 				</a>
-			</li>
-
-			<li class="divider" ng-show="zones.selected"></li>
-
-			<li>
-				<button class="btn text-center" ng-click="selectZone(null)" ng-show="zones.selected">Clear Selected</button>
 			</li>
 
 		</ul>
