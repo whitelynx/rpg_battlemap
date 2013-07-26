@@ -69,8 +69,8 @@
 			<h4 class="text-center" ng-hide="characters">Please add a character.</h4>
 			<hr>
 			<div class="input-append" style="width: calc(100% - 115px);">
-				<input type="text" class="input-block-level" placeholder="Map name here..." ng-model="new_participant" ng-click="stopPropagation($event)" >
-				<button class="btn" type="button" ng-click="invite(new_participant)">New Character</button>
+				<input type="text" class="input-block-level" placeholder="Character name here..." ng-model="new_character" ng-click="stopPropagation($event)" >
+				<button class="btn" type="button" ng-click="createCharacter(new_character)">New Character</button>
 			</div>
 		</div>
     </div>
