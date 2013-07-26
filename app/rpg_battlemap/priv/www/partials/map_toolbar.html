@@ -11,7 +11,17 @@
 	<div class="btn-group" ng-include="'/partials/layers_menu.html'"></div>
 
 	<div class="btn-group" ng-controller="ListCombatantsCtrl">
-		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Combatants<span class="caret"> </span></a>
+
+		<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">Combatants</button>
+
+		<button class="btn btn-small" ng-show="combatants.selected" ng-click="selectCombatant(null)">
+			<span class="icon-eject"> </span>
+		</button>
+
+		<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+			<span class="caret"> </span>
+		</button>
+
 		<ul class="dropdown-menu">
 
 			<li ng-repeat="combatant in combatants" style="clear:both;">
