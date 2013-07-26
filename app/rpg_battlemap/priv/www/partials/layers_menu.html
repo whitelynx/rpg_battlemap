@@ -1,4 +1,12 @@
-<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Layers<span class="caret"> </span></a>
+<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">Layers</button>
+
+<button class="btn btn-small" ng-controller="ListLayersCtrl" ng-show="layers.selected" ng-click="selectLayer(null)">
+	<span class="icon-eject"> </span>
+</button>
+
+<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+	<span class="caret"> </span>
+</button>
 
 <ul class="dropdown-menu" ng-controller="ListLayersCtrl">
 
