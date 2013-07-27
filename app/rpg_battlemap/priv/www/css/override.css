@@ -47,6 +47,8 @@
 .dropdown-menu
 {
 	padding: 7px;
+    max-height: 600px;
+    overflow-y: scroll;
 }
 
 .text-center
