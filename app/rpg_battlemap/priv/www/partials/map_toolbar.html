@@ -65,6 +65,12 @@
 				<input ng-model="combatants.selected.aura_color" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" name="selCombatantAuraColor" type="color" />
 			</li>
 
+			<li>
+			<layer for="selCombatantLayer">Layer</layer>
+				<select name="selCombatantLayer" ng-model="combatants.selected.layer_id" ng-change="saveCombatant($event, combatants.selected)" ng-options="layer.id as layer.name for layer in layers" ng-click="stopPropagation($event)">
+				</select>
+			</li>
+
 			<li class="divider"></li>
 
 			<li>

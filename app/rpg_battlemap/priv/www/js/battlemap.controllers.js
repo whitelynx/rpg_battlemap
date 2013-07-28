@@ -98,6 +98,7 @@ Controllers.controller("ListLayersCtrl", function($scope, $rootScope){
 
 Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 	$scope.combatants = $rootScope.Combatants.models;
+	$scope.layers = $rootScope.Layers.models;
 
 	$scope.removeCombatant = function(combatant){
 		var defer = combatant.$delete();
