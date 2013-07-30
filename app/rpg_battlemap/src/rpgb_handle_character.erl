@@ -110,7 +110,13 @@ to_json(Req, #ctx{character = Character} = Ctx) ->
 	{jsx:to_json(Json), Req, Ctx}.
 
 to_html(Req, Ctx) ->
-	{<<"html">>, Req, Ctx}.
+	rpgb:refresh_templates(base_dtl),
+	User = rpgb_session:get_user(Ctx#ctx.session),
+	LoginLink = rpgb:get_url(Req, ["account", "login"]),
+	LogoutLink = rpgb:get_url(Req, ["account", "logout"]),
+	{ok, Output} = base_dtl:render([{user, User},
+		{login_link, LoginLink}, {logout_link, LogoutLink}]),
+	{Output, Req, Ctx}.
 
 from_json(Req, #ctx{character_id = CharacterId} = Ctx) ->
 	#ctx{session = Session} = Ctx,
