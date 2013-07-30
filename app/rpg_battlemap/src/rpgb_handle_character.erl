@@ -77,8 +77,9 @@ delete_resource(Req, #ctx{character_id = CharacterId} = Ctx) ->
 		{ok, _} ->
 			{true, Req, Ctx};
 		{error, Err} ->
+			lager:info("error deleting: ~p", [Err]),
 			Body = iolist_to_binary(io_lib:format("Error deleteing:  ~p", [Err])),
-			{ok, Req1} = cowboy_req:set_resp_body(Body),
+			{ok, Req1} = cowboy_req:set_resp_body(Body, Req),
 			{false, Req1, Ctx}
 	end.
 
@@ -148,16 +149,15 @@ from_json(Req, #ctx{character_id = CharacterId} = Ctx) ->
 				_ ->
 					true
 			end,
+			lager:info("output for from_json: ~p", [OutVal]),
 			{OutVal, Req3, Ctx#ctx{character_id = Rec2#rpgb_rec_character.id, character = Rec2}};
 		{error, State, ErrBody} ->
 			ErrBody2 = jsx:to_json(ErrBody),
 			Req2 = cowboy_req:set_resp_body(ErrBody2, Req1),
 			{ok, Req3} = cowboy_req:reply(State, Req2),
+			lager:info("halting due to from error: ~p", [ErrBody]),
 			{halt, Req3, Ctx}
 	end.
-
-make_location(_Req, _Ctx, Rec) ->
-	rpgb:get_url(["character", integer_to_list(Rec#rpgb_rec_character.id)]).
 
 validate_character(Json, InitCharacter) ->
 	ValidateFuns = [
@@ -180,7 +180,7 @@ check_named_character({Json, Character}) ->
 	end.
 
 check_name_conflict({Json, Character}) ->
-	#rpgb_rec_character{owner_id = Owner, name = CharacterName} = Character,
+	#rpgb_rec_character{owner_id = Owner, name = CharacterName, id = Id} = Character,
 	case proplists:get_value(<<"name">>, Json) of
 		undefined ->
 			{ok, {Json, Character}};
@@ -192,7 +192,10 @@ check_name_conflict({Json, Character}) ->
 			case Searched of
 				{ok, []} ->
 					{ok, {Json, Character}};
-				_ ->
+				{ok, [#rpgb_rec_character{id = Id} | _]} ->
+					{ok, {Json, Character}};
+				Wut ->
+					lager:info("name conflict got: ~p", [Wut]),
 					{error, 409, <<"you already have a character by that name.">>}
 			end
 	end.
@@ -234,6 +237,7 @@ validate_json({Json, Character}) ->
 		{ok, Character2} ->
 			{ok, {Json, Character2}};
 		{error, {bad_color, Key}} ->
+			lager:info("invalid color: ~p", [Key]),
 			Body = iolist_to_binary(io_lib:format("invalid color for ~s.", [Key])),
 			Status = 422,
 			{error, Status, Body}

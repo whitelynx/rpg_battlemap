@@ -324,7 +324,6 @@ Controllers.controller("ListCharactersCtrl", function($scope, $rootScope, $resou
 	});
 
 	$scope.createCharacter = function(name){
-		console.log('makin', name);
 		var makeProm = $rootScope.Character.create({'name': name});
 		makeProm.$then(function(success){
 			$rootScope.characters.push(success.data);
@@ -336,7 +335,6 @@ Controllers.controller("ListCharactersCtrl", function($scope, $rootScope, $resou
 	};
 
 	$scope.deleteCharacter = function(char){
-		console.log('trying to delete', char);
 		var promise = $rootScope.Character.delete({characterid: char.id});
 		promise.$then(function(success){
 			var ind = $rootScope.characters.indexOf(char);

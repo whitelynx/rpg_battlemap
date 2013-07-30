@@ -19,5 +19,5 @@ make_json(Character) ->
 					null
 			end
 	end,
-	MutatorList = [{url, Url}, owner_id, {owner, Owner}],
+	MutatorList = [{<<"url">>, Url}, owner_id, {<<"owner">>, Owner}],
 	rpgb_rec_character:to_json(MutatorList, Character).
