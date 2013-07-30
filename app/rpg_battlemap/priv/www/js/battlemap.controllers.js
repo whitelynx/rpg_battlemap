@@ -315,11 +315,10 @@ Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 });
 
 Controllers.controller("ListCharactersCtrl", function($scope, $rootScope, $resource){
-	$rootScope.characters = [];
 
 	var charPromise = $rootScope.Character.query();
 	charPromise.$then(function(success){
-		$rootScope.characters = success.data;
+		$rootScope.characters = success.resource;
 	}, function(error){
 		console.error('failed to get characters', error);
 	});
@@ -333,6 +332,18 @@ Controllers.controller("ListCharactersCtrl", function($scope, $rootScope, $resou
 		}, function(error){
 			console.error('could not make character', error);
 			$scope.new_character = '';
+		});
+	};
+
+	$scope.deleteCharacter = function(char){
+		console.log('trying to delete', char);
+		var promise = $rootScope.Character.delete({characterid: char.id});
+		promise.$then(function(success){
+			var ind = $rootScope.characters.indexOf(char);
+			if(ind < 0){
+				return;
+			}
+			$rootScope.characters.splice(ind, 1);
 		});
 	};
 
