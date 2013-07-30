@@ -12,7 +12,7 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		$routeProvider
 			.when('/', {templateUrl: '/partials/list_maps.html',   controller: 'ListMapsCtrl'})
 			.when('/maps/:mapid', {templateUrl: '/partials/map.html',   controller: 'ViewMapCtrl'})
-			.when('/characters/:characterid', {templateUlr:'/partials/character.html',    controller: 'ViewCharacterCtrl'})
+			.when('/characters/:characterid', {templateUrl:'/partials/character.html',    controller: 'ViewCharacterCtrl'})
 			.otherwise({redirectTo: '/'});
 	}])
 	.factory('MapSocket', ['$q', '$rootScope', function($q, $rootScope){

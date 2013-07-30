@@ -279,4 +279,4 @@ generate_etag(Req, #ctx{character = Character} = Ctx) ->
 	Bin2 = term_to_binary({Bin, Updated}),
 	Md5 = crypto:md5(Bin2),
 	Etag = rpgb_util:bin_to_hexstr(Md5),
-	{Etag, Req, Ctx}.
+	{{weak, list_to_binary(Etag)}, Req, Ctx}.

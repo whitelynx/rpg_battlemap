@@ -338,6 +338,16 @@ Controllers.controller("ListCharactersCtrl", function($scope, $rootScope, $resou
 
 });
 
+Controllers.controller("ViewCharacterCtrl", function($scope, $routeParams, $rootScope, $resource){
+	var charPromise = $rootScope.Character.get($routeParams);
+	charPromise.$then(function(success){
+		$scope.character = success.data;
+	},
+	function(fail){
+		console.error('could not get character', fail);
+	});
+});
+
 Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope, $resource, MapSocket, Tool) {
 	$scope.map = {};
 
