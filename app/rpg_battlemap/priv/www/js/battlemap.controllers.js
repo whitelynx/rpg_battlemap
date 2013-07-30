@@ -339,13 +339,48 @@ Controllers.controller("ListCharactersCtrl", function($scope, $rootScope, $resou
 });
 
 Controllers.controller("ViewCharacterCtrl", function($scope, $routeParams, $rootScope, $resource){
-	var charPromise = $rootScope.Character.get($routeParams);
-	charPromise.$then(function(success){
-		$scope.character = success.data;
-	},
-	function(fail){
-		console.error('could not get character', fail);
+
+	$scope.character = $rootScope.Character.get($routeParams, function(character){
+		var splitMail = $scope.character.owner.split("@");
+		$scope.email_user = splitMail.shift();
+		$scope.mailTail = splitMail.join("@");
+		buildDefaultGravatar();
+		$scope.custom_gravatar = $scope.character.token_image_url;
 	});
+
+	var buildDefaultGravatar = function(){
+		var encodedName = encodeURIComponent($scope.character.name.toLowerCase());
+		var def = $scope.email_user + "+" + encodedName + "@" + $scope.mailTail;
+		$scope.default_gravatar = def;
+	};
+
+	var makeGravatar = function(email){
+		var md5ed = md5(email);
+		var gravatarUrl = "https://secure.gravatar.com/avatar/" + md5ed + "?d=blank";
+		return gravatarUrl;
+	};
+
+	$scope.$watch('character.name', function(){
+		buildDefaultGravatar();
+	});
+
+	$scope.setTokenDefault = function(){
+		$scope.character.token_image_url = makeGravatar($scope.default_gravatar);
+	};
+
+	$scope.setTokenUser = function(){
+		$scope.character.token_image_url = makeGravatar($scope.character.owner);
+	};
+
+	$scope.setTokenCustom = function(custom){
+		$scope.character.token_image_url = makeGravatar(custom);
+	};
+
+	$scope.saveCharacter = function(){
+		$scope.character.characterid = $scope.character.id;
+		$scope.character.$save();
+	};
+
 });
 
 Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope, $resource, MapSocket, Tool) {

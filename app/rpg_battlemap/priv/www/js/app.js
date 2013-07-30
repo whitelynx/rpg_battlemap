@@ -326,7 +326,7 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		'query':{'method':'GET', 'isArray':true, 'params':{'mapid':''}}});
 
 		$rootScope.Character = $resource('/characters/:characterid', {}, {
-			'save':{'method':'PUT'},
+			'save':{'method':'PUT', 'params':{'characterid':'@id'}},
 			'create':{'method':'POST'},
 			'query':{'method':'GET', 'isArray':true, 'params':{'characterid':''}}
 		});

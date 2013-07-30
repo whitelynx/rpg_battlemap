@@ -1,1 +1,33 @@
-<span>{{character.name}}</span>
+<img width="96" height="92" ng-src="{{character.portait_image_url}}" style="float:left; width: 96px; height: 96px" />
+
+<label for="characterName">Name</label>
+<input ng-model="character.name" name="characterName" />
+
+<label for="characterProtrait">Portrait Gravatar</label>
+<input ng-model="character.portrait_image_url" />
+
+<label for="characterColor">Color</label>
+<input ng-model="character.color" name="characterColor" type="color" />
+
+<label for="characterSize">Size</label>
+<input ng-model="character.size" name="characterSize" type="number" min="1" max="10" step="1" />
+
+<label style="clear:both;">Token Image</label>
+<img style="width:32ps; height:32px" width="32" height="32" ng-src="{{character.token_image_url}}" />
+
+<div>
+	<input type="radio" name="gravatarMode" id="gravatarModeDefault" ng-click="setTokenDefault()">
+	<label style="display:inline-block" for="gravatarModeDefault">Tagged Owner Gravatar: {{default_gravatar}}</label>
+</div>
+
+<div>
+	<input type="radio" name="gravatarMode" id="gravatarModeUser" ng-click="setTokenUser()">
+	<label style="display:inline-block" for="gravatarModelUser">Owner's Gravatar: {{character.owner}}</label>
+</div>
+
+<div>
+	<input type="radio" name="gravatarMode" id="gravatarModeCustom" ng-click="setTokenCustom(custom_gravatar)" />
+	<input ng-model="custom_gravatar" ng-change="setTokenCustom(custom_gravatar)" />
+</div>
+
+<button class="btn" ng-click="saveCharacter()">Save</button>
