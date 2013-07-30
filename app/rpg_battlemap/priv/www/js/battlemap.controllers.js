@@ -314,6 +314,30 @@ Controllers.controller("ListMapsCtrl", function($scope, $rootScope, $resource) {
 
 });
 
+Controllers.controller("ListCharactersCtrl", function($scope, $rootScope, $resource){
+	$rootScope.characters = [];
+
+	var charPromise = $rootScope.Character.query();
+	charPromise.$then(function(success){
+		$rootScope.characters = success.data;
+	}, function(error){
+		console.error('failed to get characters', error);
+	});
+
+	$scope.createCharacter = function(name){
+		console.log('makin', name);
+		var makeProm = $rootScope.Character.create({'name': name});
+		makeProm.$then(function(success){
+			$rootScope.characters.push(success.data);
+			$scope.new_character = '';
+		}, function(error){
+			console.error('could not make character', error);
+			$scope.new_character = '';
+		});
+	};
+
+});
+
 Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope, $resource, MapSocket, Tool) {
 	$scope.map = {};
 

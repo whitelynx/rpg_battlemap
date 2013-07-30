@@ -118,7 +118,7 @@
 
 -record(rpgb_rec_character, {
   id :: 'undefined' | pos_integer(),
-  owner_id :: pos_integer(),
+  owner_id :: 'undefined' | pos_integer(),
 	name :: binary(),
   color = <<"green">> :: binary(),
   portrait_image_url :: 'undefined' | binary(),

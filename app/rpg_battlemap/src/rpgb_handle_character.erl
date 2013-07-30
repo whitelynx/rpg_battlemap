@@ -39,7 +39,7 @@ rest_init(Req, [HostPort]) ->
 	{ok, Req3, #ctx{hostport = HostPort, session = Session, character_id = CharId1}}.
 
 allowed_methods(Req, #ctx{character_id = undefined} = Ctx) ->
-	{[<<"GET">>, <<"PUT">>, <<"HEAD">>], Req, Ctx};
+	{[<<"GET">>, <<"POST">>, <<"PUT">>, <<"HEAD">>], Req, Ctx};
 
 allowed_methods(Req, Ctx) ->
 	{[<<"GET">>, <<"PUT">>, <<"HEAD">>, <<"DELETE">>], Req, Ctx}.
@@ -57,18 +57,15 @@ forbidden(Req, #ctx{character_id = CharacterId, session = Session} = Ctx) ->
 	{Method, Req2} = cowboy_req:method(Req),
 	case CharacterId of
 		undefined ->
-			{false, Req, Ctx};
+			{false, Req2, Ctx};
 		_ ->
 			case rpgb_data:get_by_id(rpgb_rec_character, CharacterId) of
+				{ok, #rpgb_rec_character{owner_id = undefined} = Character} when Method == <<"GET">> ->
+					{false, Req2, Ctx#ctx{character = Character}};
+				{ok, #rpgb_rec_character{owner_id = OwnId} = Character} when User#rpgb_rec_user.id == OwnId ->
+					{false, Req2, Ctx#ctx{character = Character}};
 				{ok, Character} ->
-					if
-						User#rpgb_rec_user.id == Character#rpgb_rec_character.owner_id ->
-							{false, Req2, Ctx#ctx{character = Character}};
-						Method == <<"GET">> andalso Character#rpgb_rec_character.public ->
-							{false, Req2, Ctx#ctx{character = Character}};
-						true ->
-							{true, Req2, Ctx#ctx{character = Character}}
-					end;
+					{true, Req2, Ctx#ctx{character = Character}};
 				{error, not_found} ->
 					{ok, Req3} = cowboy_req:reply(404, Req2),
 					{halt, Req3, Ctx}
@@ -87,14 +84,14 @@ delete_resource(Req, #ctx{character_id = CharacterId} = Ctx) ->
 
 content_types_provided(Req, Ctx) ->
 	Types = [
-		{{<<"application">>, <<"json">>, []}, to_json},
-		{{<<"text">>, <<"html">>, []}, to_html}
+		{{<<"application">>, <<"json">>, '*'}, to_json},
+		{{<<"text">>, <<"html">>, '*'}, to_html}
 	],
 	{Types, Req, Ctx}.
 
 content_types_accepted(Req, Ctx) ->
 	Types = [
-		{{<<"application">>, <<"json">>, []}, from_json}
+		{{<<"application">>, <<"json">>, '*'}, from_json}
 	],
 	{Types, Req, Ctx}.
 
@@ -102,14 +99,14 @@ to_json(Req, #ctx{character = undefined} = Ctx) ->
 	User = rpgb_session:get_user(Ctx#ctx.session),
 	{ok, Chars} = rpgb_data:search(rpgb_rec_character, [{owner_id, User#rpgb_rec_user.id}]),
 	Json = lists:map(fun(C) ->
-		Url = make_location(Req, Ctx, C),
-		C:to_json([{url, Url}])
+		rpgb_rec_character:make_json(C)
 	end, Chars),
 	{jsx:to_json(Json), Req, Ctx};
 
 to_json(Req, #ctx{character = Character} = Ctx) ->
-	Url = make_location(Req, Ctx, Character),
-	Json = Character:to_json([{url, Url}]),
+	%Url = make_location(Req, Ctx, Character),
+	%Json = Character:to_json([{url, Url}]),
+	Json = rpgb_rec_character:make_json(Character),
 	{jsx:to_json(Json), Req, Ctx}.
 
 to_html(Req, Ctx) ->
@@ -136,16 +133,16 @@ from_json(Req, #ctx{character_id = CharacterId} = Ctx) ->
 		{ok, {_DerJson, Rec}} ->
 			{ok, Rec2} = rpgb_data:save(Rec),
 			%{Host, Port} = Ctx#ctx.hostport,
-			Location = make_location(Req, Ctx, Rec2),
-			Req2 = case CharacterId of
+			OutJson = rpgb_rec_character:make_json(Rec2),
+			Location = proplists:get_value(<<"url">>, OutJson),
+			Req3 = cowboy_req:set_resp_body(jsx:to_json(OutJson), Req1),
+			OutVal = case CharacterId of
 				undefined ->
-					cowboy_req:set_resp_header(<<"location">>, Location, Req1);
+					{true, Location};
 				_ ->
-					Req1
+					true
 			end,
-			OutJson = jsx:to_json(Rec2:to_json([{<<"url">>, Location}])),
-			Req3 = cowboy_req:set_resp_body(OutJson, Req2),
-			{true, Req3, Ctx#ctx{character_id = Rec2#rpgb_rec_character.id, character = Rec2}};
+			{OutVal, Req3, Ctx#ctx{character_id = Rec2#rpgb_rec_character.id, character = Rec2}};
 		{error, State, ErrBody} ->
 			ErrBody2 = jsx:to_json(ErrBody),
 			Req2 = cowboy_req:set_resp_body(ErrBody2, Req1),

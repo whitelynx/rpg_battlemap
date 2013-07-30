@@ -12,7 +12,7 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 		$routeProvider
 			.when('/', {templateUrl: '/partials/list_maps.html',   controller: 'ListMapsCtrl'})
 			.when('/maps/:mapid', {templateUrl: '/partials/map.html',   controller: 'ViewMapCtrl'})
-			.when('/maps/:mapid/edit', {templateUrl: '/partials/map.html',   controller: 'EditMapCtrl'})
+			.when('/characters/:characterid', {templateUlr:'/partials/character.html',    controller: 'ViewCharacterCtrl'})
 			.otherwise({redirectTo: '/'});
 	}])
 	.factory('MapSocket', ['$q', '$rootScope', function($q, $rootScope){
@@ -322,8 +322,14 @@ angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.
 
 		$rootScope.Map = $resource('/maps/:mapid', {}, {
 		'save': {'method':'PUT'},
-		'create':{'method':'POST', },
+		'create':{'method':'POST'},
 		'query':{'method':'GET', 'isArray':true, 'params':{'mapid':''}}});
+
+		$rootScope.Character = $resource('/characters/:characterid', {}, {
+			'save':{'method':'PUT'},
+			'create':{'method':'POST'},
+			'query':{'method':'GET', 'isArray':true, 'params':{'characterid':''}}
+		});
 
 		$rootScope.Layers = SocketResource('layer');
 		$rootScope.Combatants = SocketResource('combatant');

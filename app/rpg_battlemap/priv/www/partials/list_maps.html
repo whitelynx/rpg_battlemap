@@ -49,7 +49,7 @@
 		</div>
     </div>
 
-    <div class="span4">
+    <div class="span4" ng-controller="ListCharactersCtrl">
         <div class="navbar navbar-header navbar-small">
             <div class="navbar-inner">
                 <span class="brand"><i class="icon-user"></i> My characters</span>
@@ -57,7 +57,7 @@
         </div>
         <div class="container-fluid">
 			<table class="table table-bordered table-striped table-centered" ng-show="characters">
-				<tr ng-repeat="character in characters" ng-show="{{ character.owner_id == 1}}">
+				<tr ng-repeat="character in characters" ng-show="{{ character.owner == user}}">
 					<td class="expand">
 						<a href="{{ character.url }}">{{ character.name }}</a>
 					</td>
