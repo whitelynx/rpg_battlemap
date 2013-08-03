@@ -12,16 +12,24 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 
 	// why yes, pulling this from the window is a horrible idea.
 	$scope.signin = function(){
+		console.log('doing a signin');
 		navigator.id.request();
 	}
 
 	$scope.signout = function(){
+		console.log('doing a signout');
 		navigator.id.logout();
 	}
 
 	$scope.user = window.currentUser;
 	$scope.loginUrl = window.loginUrl;
 	$scope.logoutUrl = window.logoutUrl;
+
+	console.log('persona start', {
+		'user': $scope.user,
+		'loginUrl': $scope.loginUrl,
+		'logoutUrl': $scope.logoutUrl
+	});
 
 	navigator.id.watch({
 		loggedInUser: $scope.user,
@@ -32,18 +40,36 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 				url: $scope.loginUrl,
 				data: JSON.stringify({assertion: assertion}),
 				contentType: 'application/json',
-				success: function(res, status, xhr){ window.location.reload(); },
-				error: function(xhr, status, err){ console.log('login fail', err); }
+				success: function(res, status, xhr){
+					debugger;
+					console.log('login success');
+					window.location.reload();
+				},
+				error: function(xhr, status, err){
+					console.log('login fail', err);
+					navigator.id.logout();
+				}
 			});
 		},
 		onlogout: function(){
-			console.log('onlogout', $scope.currentUser);
+			console.log('onlogout', $scope.user);
 			$.ajax({
 				type: 'POST',
 				url: $scope.logoutUrl,
 				contentType: 'application/json',
-				success: function(res, status, xhr){ window.location.reload(); },
-				error: function(xhr, status, err){ console.log('logout fail', err); }
+				success: function(res, status, xhr){
+					debugger;
+					navigator.id.logout();
+					$scope.user = null;
+					// This is commented out to avoid an infinite loop of
+					// reloads that could occur.
+					// TODO redict user to home screen on logout.
+					//window.location.reload();
+				},
+				error: function(xhr, status, err){
+					debugger;
+					console.log('logout fail', err);
+				}
 			});
 		}
 
