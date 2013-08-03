@@ -240,7 +240,7 @@
         <rect x="0" y="0" width="100%" height="100%" stroke-opacity="0"
               fill="url(#gridPattern)" style="pointer-events:none;" id="gridRect"/>
 
-        <g ng-controller="MeasureToolCtrl" ng-show="toolData.measuring">
+        <g ng-controller="MeasureToolCtrl" ng-show="toolData.measuring" transform="translate({{ translate.x }} {{translate.y }}) scale({{ scale }})">
           <line
             x1="{{ startX() }}"
             y1="{{ startY() }}"
@@ -254,18 +254,20 @@
             y2="{{ stopY() }}"
             stroke="white" stroke-width="5" stroke-linecap="round" />
           <rect
-            x="{{ transformX( midx() * 32 ) - 3}}"
-            y="{{ transformY( midy() * 32 ) - 16 }}"
-            width="{{ distance().toString().length * 12 }}"
-            height="24"
-            rx="8"
-            ry="8"
+            x="{{ midx() * 32 - (3 * (1 / scale) ) }}"
+            y="{{ midy() * 32 - (16 * (1 / scale) ) }}"
+            width="{{ (distance().toString().length * 12) / scale }}"
+            height="{{ 24 / scale }}"
+            rx="{{8 / scale }}"
+            ry="{{8 / scale }}"
           />
           <text
-            x="{{ transformX( midx() * 32) }}"
-            y="{{ transformY( midy() * 32) }}"
+            x="{{ midx() * 32 * scale }}"
+            y="{{ midy() * 32 * scale }}"
             fill="white"
             stroke="white"
+            font-size="16"
+            transform="scale({{ 1 / scale }})"
           >{{ toolData.distance() }}</text>
         </g>
     </svg>

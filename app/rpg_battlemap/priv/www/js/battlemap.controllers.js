@@ -1118,22 +1118,26 @@ Controllers.controller("MeasureToolCtrl", function($scope, $rootScope, Tool){
 
 	$scope.startX = function(){
 		var x = safeToolData(0, 'start', 'x') + 0.5;
-		return $scope.transformX(x * 32);
+		//return $scope.transformX(x * 32);
+		return x * 32;
 	};
 
 	$scope.startY = function(){
 		var y = safeToolData(0, 'start', 'y') + 0.5;
-		return $scope.transformY(y * 32);
+		//return $scope.transformY(y * 32);
+		return y * 32;
 	}
 
 	$scope.stopX = function(){
 		var x = safeToolData(0, 'stop', 'x') + 0.5;
-		return $scope.transformX(x * 32);
+		//return $scope.transformX(x * 32);
+		return x * 32;
 	};
 
 	$scope.stopY = function(argument) {
 		var y = safeToolData(0, 'stop', 'y') + 0.5;
-		return $scope.transformY(y * 32);
+		//return $scope.transformY(y * 32);
+		return y * 32;
 	};
 
 	$scope.distance = function(){
