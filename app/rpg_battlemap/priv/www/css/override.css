@@ -71,3 +71,8 @@ button.close
 {
 	margin-left: 10px;
 }
+
+.dropdown-menu .nav
+{
+    float: none;
+}

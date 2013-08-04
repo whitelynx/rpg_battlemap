@@ -545,6 +545,9 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 				'aura_color': $scope.aura_color,
 				'layer_id': layerId
 			};
+			if(!! $scope.token_image){
+				combatant.token_image = $scope.token_image;
+			}
 
 			var defer = $rootScope.Combatants.create(combatant);
 			defer.then(function(success){
@@ -576,6 +579,15 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 
 	$scope.setTool = function(){
 		Tool(makeAddCombatantTool);
+	};
+
+	$scope.setNewCombatantFrom = function(obj){
+		$scope.name_base = obj['name'] || 'Fight Man';
+		$scope.size = obj['size'] || 1;
+		$scope.color = obj['color'] || '#00ff00';
+		$scope.token_image = obj['token_image_url'] || $obj['token_image'] || false;
+		$scope.aura_size = obj['aura_size'] || 0;
+		$scope.aura_color = obj['aura_color'] || '#00cc00';
 	};
 });
 

@@ -4,7 +4,7 @@
 // @module app.js
 //----------------------------------------------------------------------------------------------------------------------
 
-angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.mousewheel'])
+angular.module("battlemap", ['ngResource', 'battlemap.controllers', 'monospaced.mousewheel', 'ui.bootstrap'])
 	.config(['$locationProvider', function($locationProvider) {
 		$locationProvider.html5Mode(true);
 	}])
