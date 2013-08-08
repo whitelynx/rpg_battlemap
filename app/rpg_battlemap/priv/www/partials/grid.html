@@ -105,6 +105,20 @@
                   ng-mousedown="selectCombatant(combatant, $event)"
                 />
 
+                <!-- Combatants that have token images -->
+                <g ng-switch="!! combatant.token_image">
+                  <image
+                    ng-switch-when="true"
+                    x="{{ (combatant.x + 0.15) * 32 }}"
+                    y="{{ (combatant.y + 0.15) * 32 }}"
+                    width="{{ (combatant.size - 0.3) * 32 }}"
+                    height="{{ (combatant.size - 0.3) * 32 }}"
+                    xlink:href="{{combatant.token_image}}"
+                    pointer-events="none"
+                  />
+                  <g ng-switch-when="false"></g>
+                </g>
+
                 <!-- if selected, the rotating border -->
                 <rect
                   x="{{combatant.x * 32}}"

@@ -50,7 +50,63 @@
 	<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" ng-click="setTool()">
 		<span class="caret"></span>
 	</button>
-	<ul class="dropdown-menu">
+	<div ng-click="stopPropagation($event)" class="dropdown-menu">
+		<tabset>
+
+			<tab select="token_image_url=false;">
+				<tab-heading>
+					<i class="icon-edit"> </i>
+				</tab-heading>
+
+				<ul>
+
+					<li>
+						<label for="newCombatantName">Name</label>
+						<input type="text" ng-model="name_base" name="newCombatantName" ng-click="stopPropagation($event)" />
+					</li>
+
+					<li>
+						<label for="newCombatantSize">Size</label>
+						<input ng-model="size" name="newCombatantSize" ng-click="stopPropagation($event)" type="number" step="1" min="1" max="10" />
+					</li>
+
+					<li>
+						<label for="newCombatantColor">Color</label>
+						<input ng-model="color" name="newCombatantColor" ng-click="stopPropagation($event)" type="color" />
+					</li>
+
+					<li>
+						<label for="newCombatantAuraSize">Aura Size</label>
+						<input ng-model="aura_size" name="newCombatantAuraSize" ng-click="stopPropagation($event)" type="number" step="1" min="0" max="20" />
+					</li>
+
+					<li>
+						<label for="newCombatantAuraColor">Aura Color</label>
+						<input ng-model="aura_color" name="newCombatantAuraColor" ng-click="stopPropagation($event)" type="color" />
+					</li>
+
+				</ul>
+
+			</tab>
+
+			<tab>
+				<tab-heading>
+					<i class="icon-heart"> </i>
+				</tab-heading>
+
+				<ul ng-controller="ListCharactersCtrl">
+
+					<li ng-repeat="character in characters" ng-click="setNewCombatantFrom(character)">
+						<img ng-src="{{character.token_image_url}}" width="24" height="24" style="border: 5px solid {{character.color}}" />({{character.size}}) {{character.name}}
+					</li>
+
+				</ul>
+
+			</tab>
+
+		</tabset>
+	</div>
+	<!--<ul class="dropdown-menu">
 
 		<li>
 			<label for="newCombatantName">Name</label>
@@ -77,7 +133,7 @@
 			<input ng-model="aura_color" name="newCombatantAuraColor" ng-click="stopPropagation($event)" type="color" />
 		</li>
 
-	</ul>
+	</ul>-->
 </div>
 
 <div class="btn-group" data-toggle="buttons-radio" ng-controller="MapToolsCtrl">
