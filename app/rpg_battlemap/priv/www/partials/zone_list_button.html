@@ -1,0 +1,20 @@
+<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">{{ plural_mode }}</button>
+
+<button class="btn btn-small" ng-show="zones.selected" ng-click="selectZone(null)">
+	<span class="icon-eject"> </span>
+</button>
+
+<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+	<span class="caret"></span>
+</button>
+
+<ul class="dropdown-menu">
+
+	<li ng-repeat="zone in zones | filter:zoneIsVisible()">
+		<a ng-click="selectZone(zone)" ng-class="{'selected':zones.selected == zone}">
+			<button type="button" class="close pull-right" ng-click="removeZone(zone, $event)">&times;</button>
+			{{ zone.name }}
+		</a>
+	</li>
+
+</ul>

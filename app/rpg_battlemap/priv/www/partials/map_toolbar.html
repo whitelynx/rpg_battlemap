@@ -80,11 +80,11 @@
 		</ul>
 	</div>
 
-	<div class="btn-group" ng-controller="ListZonesCtrl" ng-show="user == map.owner">
+	<div class="btn-group" ng-controller="ListAllZonesCtrl">
 
 		<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">Zones</button>
 
-		<button class="btn btn-small" ng-show="zones.selected" ng-click="selectZone(null)">
+		<button class="btn btn-small" ng-show="selectedZone" ng-click="selectZone(null)">
 			<span class="icon-eject"> </span>
 		</button>
 
@@ -92,58 +92,98 @@
 			<span class="caret"></span>
 		</button>
 
-		<ul class="dropdown-menu">
+		<div ng-click="stopPropagation($event)" class="dropdown-menu">
+			<tabset>
 
-			<li ng-repeat="zone in zones | filter:zoneIsVisible()">
-				<a ng-click="selectZone(zone)" ng-class="{'selected':zones.selected == zone}">
-					<button type="button" class="close pull-right" ng-click="removeZone(zone, $event)">&times;</button>
-					{{ zone.name }}
-				</a>
-			</li>
+				<tab>
+					<tab-heading>
+						<i class="icon-leaf"> </i>
+					</tab-heading>
 
-		</ul>
+					<ul>
+						<li ng-repeat="zone in scenery | filter:zoneIsVisible()">
+							<div ng-click="selectZone(zone)" ng-class="{'selected':selectedZone == zone}">
+								<button type="button" class="close pull-right" ng-click="removeZone(zone, $event)">&times;</button>
+								{{ zone.name }}
+							</div>
+						</li>
+					</ul>
+
+				</tab>
+
+				<tab>
+					<tab-heading>
+						<i class="icon-sun"> </i>
+					</tab-heading>
+
+					<ul>
+						<li ng-repeat="zone in auras | filter:zoneIsVisible()">
+							<div ng-click="selectZone(zone)" ng-class="{'selected':selectedZone == zone}">
+								<button type="button" class="close pull-right" ng-click="removeZone(zone, $event)">&times;</button>
+								{{ zone.name }}
+							</div>
+						</li>
+					</ul>
+
+				</tab>
+
+				<tab ng-show="{{user = map.owner }}">
+					<tab-heading>
+						<i class="icon-road"> </i>
+					</tab-heading>
+
+					<li ng-repeat="zone in zones | filter:zoneIsVisible()">
+						<div ng-click="selectZone(zone)" ng-class="{'selected':selectedZone == zone}">
+							<button type="button" class="close pull-right" ng-click="removeZone(zone, $event)">&times;</button>
+							{{ zone.name }}
+						</div>
+					</li>
+
+				</tab>
+			</tabset>
+		</div>
 	</div>
 
-	<div class="btn-group" ng-controller="ListZonesCtrl" ng-show="zones.selected">
+	<div class="btn-group" ng-controller="ListAllZonesCtrl" ng-show="selectedZone">
 		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#">
-			{{zones.selected.name}} <span class="caret"></span>
+			{{selectedZone.name}} <span class="caret"></span>
 		</a>
 		<ul class="dropdown-menu">
 
 			<li>
 				<label for="selZoneName">Name</label>
-				<input ng-model="zones.selected.name" name="selZoneName" ng-click="stopPropagation($event)" ng-change="saveZone(zones.selected, $event)" />
+				<input ng-model="selectedZone.name" name="selZoneName" ng-click="stopPropagation($event)" ng-change="saveZone(selectedZone, $event)" />
 			</li>
 
 			<li>
 				<label for="selZoneFill">Fill Color</label>
-				<input ng-model="zones.selected.fill_color" name="selZoneFill" ng-click="stopPropagation($event)" type="color" ng-change="saveZone(zones.selected, $event)"/>
+				<input ng-model="selectedZone.fill_color" name="selZoneFill" ng-click="stopPropagation($event)" type="color" ng-change="saveZone(selectedZone, $event)"/>
 			</li>
 
 			<li>
 				<label for="selZoneFillOpactiy">Fill Opacity</label>
-				<input ng-model="zones.selected.fill_opacity" name="selZoneFillOpacity" ng-click="stopPropagation($event)" type="number" min="0" max="1" step="0.1" ng-change="saveZone(zones.selected, $event)"/>
+				<input ng-model="selectedZone.fill_opacity" name="selZoneFillOpacity" ng-click="stopPropagation($event)" type="number" min="0" max="1" step="0.1" ng-change="saveZone(selectedZone, $event)"/>
 			</li>
 
 			<li>
 				<label for="selZoneStroke">Stroke Color</label>
-				<input ng-model="zones.selected.stroke_color" name="selZoneStroke" ng-click="stopPropagation($event)" type="color" ng-change="saveZone(zones.selected, $event" />
+				<input ng-model="selectedZone.stroke_color" name="selZoneStroke" ng-click="stopPropagation($event)" type="color" ng-change="saveZone(selectedZone, $event" />
 			</li>
 
 			<li>
 				<label for="selZoneStrokeWidth">Stroke Width</label>
-				<input ng-model="zones.selected.stroke_width" name="selZoneStrokeWidth" ng-click="stopPropagation($event)" type="number" min="0" max="10" step="1" ng-change="saveZone(zones.selected, $event)" />
+				<input ng-model="selectedZone.stroke_width" name="selZoneStrokeWidth" ng-click="stopPropagation($event)" type="number" min="0" max="10" step="1" ng-change="saveZone(selectedZone, $event)" />
 			</li>
 
 			<li>
 				<label for="selZoneStrokeOpacity">Stroke Opacity</label>
-				<input ng-model="zones.selected.stroke_opacity" name="selZoneStrokeOpactiy" ng-click="stopPropagation($event)" type="number" min="0" max="1" step="0.1" ng-change="saveZone(zones.selected, $event)"/>
+				<input ng-model="selectedZone.stroke_opacity" name="selZoneStrokeOpactiy" ng-click="stopPropagation($event)" type="number" min="0" max="1" step="0.1" ng-change="saveZone(selectedZone, $event)"/>
 			</li>
 
 			<li class="divider"></li>
 
 			<li>
-				<button class="btn btn-danger" ng-click="removeZone(zones.selected, $event)">Delete</button>
+				<button class="btn btn-danger" ng-click="removeZone(selectedZone, $event)">Delete</button>
 			</li>
 
 		</ul>

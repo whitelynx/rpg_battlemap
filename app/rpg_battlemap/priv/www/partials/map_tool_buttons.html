@@ -1,3 +1,9 @@
+<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-init="name = 'Movable Scenery'; mode = 'Scenery';" ng-include="'/partials/zone_tool_button.html'">
+</div>
+
+<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-init="name = 'Floating Aura'; mode = 'Aura';" ng-include="'/partials/zone_tool_button.html'">
+</div>
+
 <div class="btn-group" ng-controller="AddZoneToolCtrl" ng-show="{{ map.owner == user }}" ng-init="name = 'Blocking Terrain'; mode = 'Zone';" ng-include="'/partials/zone_tool_button.html'">
 </div>
 
@@ -63,34 +69,6 @@
 
 		</tabset>
 	</div>
-	<!--<ul class="dropdown-menu">
-
-		<li>
-			<label for="newCombatantName">Name</label>
-			<input type="text" ng-model="name_base" name="newCombatantName" ng-click="stopPropagation($event)" />
-		</li>
-
-		<li>
-			<label for="newCombatantSize">Size</label>
-			<input ng-model="size" name="newCombatantSize" ng-click="stopPropagation($event)" type="number" step="1" min="1" max="10" />
-		</li>
-
-		<li>
-			<label for="newCombatantColor">Color</label>
-			<input ng-model="color" name="newCombatantColor" ng-click="stopPropagation($event)" type="color" />
-		</li>
-
-		<li>
-			<label for="newCombatantAuraSize">Aura Size</label>
-			<input ng-model="aura_size" name="newCombatantAuraSize" ng-click="stopPropagation($event)" type="number" step="1" min="0" max="20" />
-		</li>
-
-		<li>
-			<label for="newCombatantAuraColor">Aura Color</label>
-			<input ng-model="aura_color" name="newCombatantAuraColor" ng-click="stopPropagation($event)" type="color" />
-		</li>
-
-	</ul>-->
 </div>
 
 <div class="btn-group" data-toggle="buttons-radio" ng-controller="MapToolsCtrl">

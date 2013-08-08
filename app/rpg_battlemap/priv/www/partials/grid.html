@@ -22,9 +22,63 @@
           <g ng-repeat="layer in layers | filter:isVisible">
 
             <!-- zones -->
-            <g ng-controller="ListZonesCtrl">
+            <g ng-controller="ListAllZonesCtrl" ng-init="mode='Zone';">
 
               <g ng-repeat="zone in zones" ng-show="layer.id == zone.layer_id">
+
+                <g ng-switch="zone.shape">
+
+                  <rect ng-switch-when="rect"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    x="{{zone.x * 32}}"
+                    y="{{zone.y * 32}}"
+                    width="{{zone.width * 32}}"
+                    height="{{zone.height * 32}}" 
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <circle ng-switch-when="circle"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    cx="{{zone.cx * 32}}"
+                    cy="{{zone.cy * 32}}"
+                    r="{{zone.r * 32}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <polygon ng-switch-when="polygon"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    points="{{pointString(zone)}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <polyline ng-switch-when="polyline"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    points="{{pointString(zone)}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                </g>
+
+              </g>
+
+            </g>
+
+            <!-- scenery -->
+            <g ng-controller="ListAllZonesCtrl" ng-init="mode = 'Scenery';">
+
+              <g ng-repeat="zone in scenery" ng-show="layer.id == zone.layer_id">
 
                 <g ng-switch="zone.shape">
 
@@ -134,6 +188,61 @@
                 >
                   <animate attributeType="auto" attributeName="stroke-dashoffset" from="0" to="20" dur="1s" repeatCount="indefinite" />
                 </rect>
+
+              </g>
+
+            </g>
+
+            <!-- auras -->
+            <g ng-controller="ListAllZonesCtrl" ng-init="mode = 'Aura';">
+
+              <g ng-repeat="zone in auras" ng-show="layer.id == zone.layer_id">
+
+                <g ng-switch="zone.shape">
+
+                  <rect ng-switch-when="rect"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity / 3.0}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    x="{{zone.x * 32}}"
+                    y="{{zone.y * 32}}"
+                    width="{{zone.width * 32}}"
+                    height="{{zone.height * 32}}" 
+                    pointer-events="{{ pointerEvents(zone); }}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <circle ng-switch-when="circle"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity / 3.0}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    cx="{{zone.cx * 32}}"
+                    cy="{{zone.cy * 32}}"
+                    r="{{zone.r * 32}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <polygon ng-switch-when="polygon"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity / 3.0}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    points="{{pointString(zone)}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                  <polyline ng-switch-when="polyline"
+                    fill="{{zone.fill_color}}"
+                    fill-opacity="{{zone.fill_opacity / 3.0}}"
+                    stroke="{{zone.stroke_color}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
+                    points="{{pointString(zone)}}"
+                    ng-mousedown="setToolOverride(zone, $event)" />
+
+                </g>
 
               </g>
 

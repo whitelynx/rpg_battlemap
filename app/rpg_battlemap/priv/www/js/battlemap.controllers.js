@@ -195,8 +195,116 @@ Controllers.controller("ListCombatantsCtrl", function($scope, $rootScope){
 
 });
 
-Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
+Controllers.controller("ListAllZonesCtrl", function($scope, $rootScope){
 	$scope.zones = $rootScope.Zones.models;
+	$scope.scenery = $rootScope.Scenery.models;
+	$scope.auras = $rootScope.Auras.models;
+	$rootScope.selectedZone = null;
+
+	$scope.selectZone = function(zone){
+		$rootScope.selectedZone = zone;
+	};
+
+	$scope.removeZone = function(zone, ev){
+		if(ev){
+			$rootScope.stopPropagation(ev);
+		}
+
+		var defer = zone.$delete();
+		defer.then(function(success){
+			if($scope.selectedZone == zone){
+				$scope.selectedZone = null;
+			}
+			return true;
+		},
+		function(fail){
+			console.error('could not delete zone', fail);
+		});
+	};
+
+	$scope.saveZone = function(zone, ev){
+		var defer = zone.$save();
+		defer.then(function(success){
+			return true;
+		},
+		function(fail){
+			console.error('could not save zone', fail);
+		});
+	};
+
+	$scope.pointerEvents = function(zone){
+		if(zone != $scope.selectedZone){
+			return "none";
+		}
+		return "visible";
+	};
+
+	$scope.setToolOverride = function(zone, ev){
+		if(zone != $scope.selectedZone){
+			return;
+		}
+		if(ev.overrideTool){
+			return;
+		}
+		var dragData = {};
+		var override = {
+			'grid_mousedown': function(origin, ev, cellX, cellY){
+				var xp = 'x';
+				var yp = 'x'
+				switch(zone.shape){
+					case 'circle':
+						xp = 'cx';
+						yp = 'cy';
+						break;
+					default:
+						xp = 'x';
+						yp = 'y';
+				}
+				dragData.lastX = $rootScope.nearest(zone[xp] - cellX, 2);
+				dragData.lastY = $rootScope.nearest(zone[yp] - cellY, 2);
+			},
+			'grid_mousemove': function(origin, ev, cellX, cellY){
+				var xp, yp;
+				switch(zone.shape){
+					case 'rect':
+						xp = 'x';
+						yp = 'y';
+						break;
+					case 'circle':
+						xp = 'cx';
+						yp = 'cy';
+						break;
+				}
+				zone[xp] = $rootScope.nearest(cellX + dragData.lastX, 2);
+				zone[yp] = $rootScope.nearest(cellY + dragData.lastY, 2);
+				var defer = zone.$save();
+				defer.then(function(success){
+					var broadcast = 'zone_moved';
+					$rootScope.$broadcast(broadcast, zone, $scope.mode);
+				},
+				function(fail){
+					console.log('zone move failed', fail);
+				})
+			}
+		};
+		ev.overrideTool = override;
+	};
+});
+
+Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
+	$scope.$watch('mode', function(oldval, newval){
+		if(! newval){
+			return;
+		}
+		var lookupBit = newval;
+
+		if(lookupBit != 'Scenery'){
+			lookupBit = lookupBit + 's';
+		}
+
+		$scope.plural_mode = lookupBit;
+		$scope.zones = $rootScope[lookupBit].models;
+	});
 
 	$scope.$on('selectzone', function(ev, zone) {
 		$scope.selectZone(zone);
@@ -245,7 +353,7 @@ Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 	};
 
 	$scope.setToolOverride = function(zone, ev){
-		if(zone != $scope.zones.selected){
+		if(zone != $scope.selectedZone){
 			return;
 		}
 		if(ev.overrideTool){
@@ -284,7 +392,8 @@ Controllers.controller("ListZonesCtrl", function($scope, $rootScope){
 				zone[yp] = $rootScope.nearest(cellY + dragData.lastY, 2);
 				var defer = zone.$save();
 				defer.then(function(success){
-					$rootScope.$broadcast('zone_moved', zone);
+					var broadcast = $scope.mode.toLowerCase() + '_moved';
+					$rootScope.$broadcast(broadcast, zone, $scope.mode);
 				},
 				function(fail){
 					console.log('zone move failed', fail);
@@ -592,7 +701,6 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 });
 
 Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
-	//$scope.name = "Blocking Terrain";
 	$scope.shape = 'rect';
 	$scope.shapes = ['rect', 'circle', 'polyline', 'polygon'];
 	$scope.fill_color = '#008800';
@@ -608,7 +716,10 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 	$scope.setTool = function(){
 		var makeAddZoneTool = function(def){
 			def.name = 'Add ' + $scope.mode;
-			var modelThing = $scope.mode + 's';
+			var modelThing = $scope.mode;
+			if(modelThing != 'Scenery'){
+				modelThing = modelThing + 's';
+			}
 			def.grid_mousedown = function(origin, ev, cellX, cellY){
 
 				var layer = false;
@@ -714,7 +825,7 @@ Controllers.controller("EditZoneCtrl", function($scope, $rootScope, Tool){
 
 	$scope.setPoints = function(){ return; };
 
-	$scope.$watch('Zones.models.selected', function(newVal){
+	$scope.$watch('selectedZone', function(newVal){
 		$scope.zone = newVal;
 		if(! $scope.zone){
 			$scope.points = [];
@@ -892,7 +1003,7 @@ Controllers.controller("EditCircleZoneCtrl", function($scope, $rootScope, Tool){
 Controllers.controller("EditRectZoneCtrl", function($scope, $rootScope, Tool){
 	$scope.points = [];
 
-	$scope.$watch('Zones.models.selected', function(zone){
+	$scope.$watch('selectedZone', function(zone){
 		if(! zone){
 			$scope.points = [];
 			return;
