@@ -1,0 +1,43 @@
+<button class="btn btn-small" ng-class="{'active':toolName == 'Add Zone'}" ng-click="setTool()">{{ name }}</button>
+<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" ng-click="setTool()">
+	<span class="caret"></span>
+</button>
+
+<ul class="dropdown-menu">
+
+	<li>
+		<label for="newZoneName">Name</label>
+		<input type="text" ng-model="name" name="newZoneName" ng-click="stopPropagation($event)" />
+	</li>
+
+	<li>
+		<label for="newZoneShape">Shape</label>
+		<select name="newZoneShape" ng-model="shape" ng-options="s for s in shapes"></select>
+	</li>
+
+	<li>
+		<label for="newZoneFill">Fill Color</label>
+		<input ng-model="fill_color" name="newZoneFill" ng-click="stopPropagation($event)" type="color" />
+	</li>
+
+	<li>
+		<label for="newZoneFillOpactiy">Fill Opacity</label>
+		<input ng-model="fill_opacity" name="newZoneFillOpacity" ng-click="stopPropagation($event)" type="number" min="0" max="1" step="0.1" />
+	</li>
+
+	<li>
+		<label for="newZoneStroke">Stroke Color</label>
+		<input ng-model="stroke_color" name="newZoneStroke" ng-click="stopPropagation($event)" type="color" />
+	</li>
+
+	<li>
+		<label for="newZoneStrokeWidth">Stroke Width</label>
+		<input ng-model="stroke_width" name="newZoneStrokeWidth" ng-click="stopPropagation($event)" type="number" min="0" max="10" step="1" />
+	</li>
+
+	<li>
+		<label for="newZoneStrokeOpacity">Stroke Opacity</label>
+		<input ng-model="stroke_opacity" name="newZoneStrokeOpactiy" ng-click="stopPropagation($event)" type="number" min="0" max="1" step="0.1" />
+	</li>
+
+</ul>

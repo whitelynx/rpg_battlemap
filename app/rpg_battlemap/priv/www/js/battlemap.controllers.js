@@ -592,7 +592,7 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 });
 
 Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
-	$scope.name = "Blocking Terrain";
+	//$scope.name = "Blocking Terrain";
 	$scope.shape = 'rect';
 	$scope.shapes = ['rect', 'circle', 'polyline', 'polygon'];
 	$scope.fill_color = '#008800';
@@ -607,7 +607,8 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 
 	$scope.setTool = function(){
 		var makeAddZoneTool = function(def){
-			def.name = 'Add Zone';
+			def.name = 'Add ' + $scope.mode;
+			var modelThing = $scope.mode + 's';
 			def.grid_mousedown = function(origin, ev, cellX, cellY){
 
 				var layer = false;
@@ -646,7 +647,7 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 					}
 					return red;
 				}
-				var maybeAppend = $rootScope.Zones.models.reduce(reduceFunc, 0);
+				var maybeAppend = $rootScope[modelThing].models.reduce(reduceFunc, 0);
 				var name = $scope.name;
 				if(maybeAppend){
 					name += " " + maybeAppend;
@@ -687,12 +688,13 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 						break;
 				}
 
-				var defer = $scope.Zones.create(newZone);
+				var defer = $scope[modelThing].create(newZone);
 				defer.then(function(zone){
-					console.log('created new zone', zone);
+					console.log('created new zone', zone, $scope.mode);
 
 					// Select the zone, and change our tool
-					$rootScope.$broadcast("selectzone", zone);
+					var broadcast = "select" + $scope.mode.toLowerCase();
+					$rootScope.$broadcast(broadcast, zone);
 					$rootScope.$broadcast("settool", 'Normal');
 					//$scope.setTool('Normal');
 				},
