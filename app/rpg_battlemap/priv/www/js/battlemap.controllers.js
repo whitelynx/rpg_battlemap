@@ -41,7 +41,6 @@ Controllers.controller("PersonaCtrl", function($scope, $rootScope){
 				data: JSON.stringify({assertion: assertion}),
 				contentType: 'application/json',
 				success: function(res, status, xhr){
-					debugger;
 					console.log('login success');
 					window.location.reload();
 				},
