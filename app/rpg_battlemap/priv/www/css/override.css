@@ -48,7 +48,8 @@
 {
 	padding: 7px;
     max-height: 600px;
-    overflow-y: scroll;
+    overflow-y: auto;
+    min-width: 170px;
 }
 
 .text-center
