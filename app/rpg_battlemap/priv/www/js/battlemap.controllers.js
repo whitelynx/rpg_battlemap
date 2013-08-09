@@ -201,6 +201,10 @@ Controllers.controller("ListAllZonesCtrl", function($scope, $rootScope){
 	$scope.auras = $rootScope.Auras.models;
 	$rootScope.selectedZone = null;
 
+	$scope.$on('selectzone', function(ev, zone) {
+		$scope.selectZone(zone);
+	});
+
 	$scope.selectZone = function(zone){
 		$rootScope.selectedZone = zone;
 	};
@@ -585,16 +589,25 @@ Controllers.controller("ViewMapCtrl", function($scope, $routeParams, $rootScope,
 	};
 });
 
-Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool){
+Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, $resource, Tool){
 	$scope.$on('grid_toolchange', function(ev, newTool){
 		$scope.toolName = newTool.name;
 	});
 
-	$scope.name_base = 'Fight Man';
-	$scope.size = 1;
-	$scope.color = '#00ff00';
-	$scope.aura_size = 0;
-	$scope.aura_color = '#009900';
+	var charPromise = $rootScope.Character.query();
+	charPromise.$then(function(success){
+		$scope.characters = success.resource;
+	}, function(fail){
+		console.error('failed to get characters', error);
+	});
+
+	$scope.combatant = {
+		name_base: 'Fight Man',
+		size: 1,
+		color: '#00ff00',
+		aura_size: 0,
+		aura_color: '#009900'
+	}
 
 	var makeAddCombatantTool = function(def){
 		def.name = 'Add Combatant';
@@ -602,7 +615,7 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 		var mouseIsDown = false;
 
 		def.grid_mousedown = function(origin, ev, cellX, cellY){
-			if($scope.name_base == ""){
+			if($scope.combatant.name_base == ""){
 				return;
 			}
 
@@ -621,7 +634,7 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 				}, layerId)
 			}
 
-			var regEx = RegExp("^" + $scope.name_base + "( \\d+)?$");
+			var regEx = RegExp("^" + $scope.combatant.name_base + "( \\d+)?$");
 			var reduceFunc = function(red, combatant){
 				var gotNum = 1;
 				var match = regEx.exec(combatant.name);
@@ -639,7 +652,7 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 				return red;
 			}
 			var maybeAppend = $rootScope.Combatants.models.reduce(reduceFunc, 0);
-			var name = $scope.name_base;
+			var name = $scope.combatant.name_base;
 			if(maybeAppend){
 				name += " " + maybeAppend;
 			}
@@ -648,14 +661,14 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 				'x': x,
 				'y': y,
 				'name': name,
-				'size': $scope.size,
-				'color': $scope.color,
-				'aura_size': $scope.aura_size,
-				'aura_color': $scope.aura_color,
+				'size': $scope.combatant.size,
+				'color': $scope.combatant.color,
+				'aura_size': $scope.combatant.aura_size,
+				'aura_color': $scope.combatant.aura_color,
 				'layer_id': layerId
 			};
-			if(!! $scope.token_image){
-				combatant.token_image = $scope.token_image;
+			if(!! $scope.combatant.token_image){
+				combatant.token_image = $scope.combatant.token_image;
 			}
 
 			var defer = $rootScope.Combatants.create(combatant);
@@ -690,13 +703,17 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, Tool
 		Tool(makeAddCombatantTool);
 	};
 
+	$scope.$watch('combatant.token_image', function(a,b){
+		console.log('token image change', a, b);
+	});
+
 	$scope.setNewCombatantFrom = function(obj){
-		$scope.name_base = obj['name'] || 'Fight Man';
-		$scope.size = obj['size'] || 1;
-		$scope.color = obj['color'] || '#00ff00';
-		$scope.token_image = obj['token_image_url'] || $obj['token_image'] || false;
-		$scope.aura_size = obj['aura_size'] || 0;
-		$scope.aura_color = obj['aura_color'] || '#00cc00';
+		$scope.combatant.name_base = obj['name'] || $scope.combatant.name_base;
+		$scope.combatant.size = obj['size'] || $scope.combatant.size;
+		$scope.combatant.color = obj['color'] || $scope.combatant.color;
+		$scope.combatant.token_image = obj['token_image_url'] || obj['token_image'] || false;
+		$scope.combatant.aura_size = obj['aura_size'] || $scope.combatant.aura_size;
+		$scope.combatant.aura_color = obj['aura_color'] || $scope.combatant.aura_color;
 	};
 });
 
@@ -804,7 +821,7 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 					console.log('created new zone', zone, $scope.mode);
 
 					// Select the zone, and change our tool
-					var broadcast = "select" + $scope.mode.toLowerCase();
+					var broadcast = "selectzone";
 					$rootScope.$broadcast(broadcast, zone);
 					$rootScope.$broadcast("settool", 'Normal');
 					//$scope.setTool('Normal');

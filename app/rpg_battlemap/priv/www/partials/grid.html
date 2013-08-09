@@ -222,6 +222,7 @@
                     cx="{{zone.cx * 32}}"
                     cy="{{zone.cy * 32}}"
                     r="{{zone.r * 32}}"
+                    pointer-events="{{ pointerEvents(zone); }}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polygon ng-switch-when="polygon"
@@ -231,6 +232,7 @@
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
                     points="{{pointString(zone)}}"
+                    pointer-events="none"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polyline ng-switch-when="polyline"
@@ -240,6 +242,7 @@
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
                     points="{{pointString(zone)}}"
+                    pointer-events="none"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                 </g>
