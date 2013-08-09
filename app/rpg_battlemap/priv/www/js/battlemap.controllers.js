@@ -215,8 +215,8 @@ Controllers.controller("ListAllZonesCtrl", function($scope, $rootScope){
 
 		var defer = zone.$delete();
 		defer.then(function(success){
-			if($scope.selectedZone == zone){
-				$scope.selectedZone = null;
+			if($rootScope.selectedZone == zone){
+				$rootScope.selectedZone = null;
 			}
 			return true;
 		},
@@ -242,8 +242,16 @@ Controllers.controller("ListAllZonesCtrl", function($scope, $rootScope){
 		return "visible";
 	};
 
+	$scope.pointString = function(zone){
+		return zone.points.map(function(p){
+			var x = p.x * 32;
+			var y = p.y * 32;
+			return x +',' + y;
+		}).join(' ');
+	};
+
 	$scope.setToolOverride = function(zone, ev){
-		if(zone != $scope.selectedZone){
+		if(zone != $rootScope.selectedZone){
 			return;
 		}
 		if(ev.overrideTool){
@@ -717,13 +725,15 @@ Controllers.controller("AddCombatantToolCtrl", function($scope, $rootScope, $res
 });
 
 Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
-	$scope.shape = 'rect';
-	$scope.shapes = ['rect', 'circle', 'polyline', 'polygon'];
-	$scope.fill_color = '#008800';
-	$scope.fill_opacity = 1;
-	$scope.stroke_color = '#000000';
-	$scope.stroke_width = 5;
-	$scope.stroke_opacity = '1';
+	$scope.zone = $scope.zone || {};
+	$scope.zone.shape = 'rect';
+	$scope.zone.fill_color = '#008800';
+	$scope.zone.fill_opacity = 1;
+	$scope.zone.stroke_color = '#000000';
+	$scope.zone.stroke_width = 5;
+	$scope.zone.stroke_opacity = '1';
+
+	$scope.shapes = ['rect', 'circle', 'polyline', 'polygon'],
 
 	$scope.$on('grid_toolchange', function(ev, newTool){
 		$scope.toolName = newTool.name;
@@ -754,7 +764,7 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 					return;
 				}
 
-				var regEx = RegExp("^" + $scope.name + "( \\d+)?$");
+				var regEx = RegExp("^" + $scope.zone.name + "( \\d+)?$");
 				var reduceFunc = function(red, zone){
 					if(zone.layer_id != layer.id){
 						return red;
@@ -775,23 +785,23 @@ Controllers.controller("AddZoneToolCtrl", function($scope, $rootScope, Tool){
 					return red;
 				}
 				var maybeAppend = $rootScope[modelThing].models.reduce(reduceFunc, 0);
-				var name = $scope.name;
+				var name = $scope.zone.name;
 				if(maybeAppend){
 					name += " " + maybeAppend;
 				}
 
 				var newZone = {
 					name:name,
-					shape: $scope.shape,
+					shape: $scope.zone.shape,
 					layer_id: layer.id,
-					stroke_color: $scope.stroke_color,
-					stroke_width: $scope.stroke_width,
-					stroke_opacity: $scope.stroke_opacity,
-					fill_color: $scope.fill_color,
-					fill_opacity: $scope.fill_opacity
+					stroke_color: $scope.zone.stroke_color,
+					stroke_width: $scope.zone.stroke_width,
+					stroke_opacity: $scope.zone.stroke_opacity,
+					fill_color: $scope.zone.fill_color,
+					fill_opacity: $scope.zone.fill_opacity
 				};
 
-				switch($scope.shape){
+				switch($scope.zone.shape){
 					case 'rect':
 						newZone.x = $rootScope.nearest(cellX, 2);
 						newZone.y = $rootScope.nearest(cellY, 2);
@@ -841,7 +851,8 @@ Controllers.controller("EditZoneCtrl", function($scope, $rootScope, Tool){
 
 	$scope.setPoints = function(){ return; };
 
-	$scope.$watch('selectedZone', function(newVal){
+	$scope.$watch('selectedZone', function(newVal, oldVal){
+		console.log('selectedZone change', oldVal, newVal);
 		$scope.zone = newVal;
 		if(! $scope.zone){
 			$scope.points = [];
@@ -864,7 +875,7 @@ Controllers.controller("EditPolyZoneCtrl", function($scope, $rootScope, Tool){
 	$scope.points = [];
 	$scope.midPoints = [];
 
-	$scope.$watch('Zones.models.selected', function(zone){
+	$scope.$watch('selectedZone', function(zone){
 		if(! zone){
 			$scope.points = [];
 			return;
@@ -967,7 +978,7 @@ Controllers.controller("EditPolyZoneCtrl", function($scope, $rootScope, Tool){
 Controllers.controller("EditCircleZoneCtrl", function($scope, $rootScope, Tool){
 	$scope.points = [];
 
-	$scope.$watch('Zones.models.selected', function(zone){
+	$scope.$watch('selectedZone', function(zone){
 		if(! zone){
 			$scope.points = [];
 			return

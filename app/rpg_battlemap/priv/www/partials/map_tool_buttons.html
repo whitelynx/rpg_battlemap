@@ -1,10 +1,10 @@
-<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-init="name = 'Movable Scenery'; mode = 'Scenery';" ng-include="'/partials/zone_tool_button.html'">
+<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-init="zone.name = 'Movable Scenery'; mode = 'Scenery';" ng-include="'/partials/zone_tool_button.html'">
 </div>
 
-<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-init="name = 'Floating Aura'; mode = 'Aura';" ng-include="'/partials/zone_tool_button.html'">
+<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-init="zone.name = 'Floating Aura'; mode = 'Aura';" ng-include="'/partials/zone_tool_button.html'">
 </div>
 
-<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-show="{{ map.owner == user }}" ng-init="name = 'Blocking Terrain'; mode = 'Zone';" ng-include="'/partials/zone_tool_button.html'">
+<div class="btn-group" ng-controller="AddZoneToolCtrl" ng-show="{{ map.owner == user }}" ng-init="zone.name = 'Blocking Terrain'; mode = 'Zone';" ng-include="'/partials/zone_tool_button.html'">
 </div>
 
 
