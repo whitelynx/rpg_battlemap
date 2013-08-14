@@ -66,7 +66,7 @@
 	stroke_color = <<"#000000">> :: binary(),
 	stroke_width = 5 :: non_neg_integer(),
 	stroke_opacity = 1 :: float(),
-	fill_color = <<"008800">> :: binary(),
+	fill_color = <<"#008800">> :: binary(),
 	fill_opacity = 1 :: float(),
 	shape = 'rect' :: 'rect' | 'circle' | 'ellipse' | 'line' | 'polyline' | 'polygon' | 'path',
 	% polygon, polyline
