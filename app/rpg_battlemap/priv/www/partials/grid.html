@@ -1,5 +1,5 @@
 <section class="grid" ng-controller="GridCtrl">
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" ng-style="mapBackgroundCssObject()" height="{{ gridHeight }}" width="100%" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp($event)" ng-mousemove="mouseMove($event)" ng-mouseleave="mouseLeave($event)" msd-wheel="zoom($event);">
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" ng-style="mapBackgroundCssObject()" ng-attr-height="{{ gridHeight }}" width="100%" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp($event)" ng-mousemove="mouseMove($event)" ng-mouseleave="mouseLeave($event)" msd-wheel="zoom($event);">
         <defs>
             <pattern x="0" y="0" width="32" height="32" id="gridPattern"
                     patternUnits="userSpaceOnUse"
@@ -9,7 +9,7 @@
                     x="0"
                     y="0"
                     width="32" height="32" fill-opacity="0"
-             stroke="{{ map.gridline_color}}"
+             ng-attr-stroke="{{ map.gridline_color}}"
              stroke-width="2"
              stroke-opacity="{{ map.grid_opacity }}" />
 
@@ -18,7 +18,7 @@
 
         <!-- someday I'll figure out how to do this :( ) -->
         <!--<g ng-include="'/partials/layers_svg.html'"></g>-->
-        <g ng-controller="ListLayersCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
+        <g ng-controller="ListLayersCtrl" ng-attr-transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
           <g ng-repeat="layer in layers | filter:isVisible">
 
             <!-- zones -->
@@ -29,44 +29,44 @@
                 <g ng-switch="zone.shape">
 
                   <rect ng-switch-when="rect"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    x="{{zone.x * 32}}"
-                    y="{{zone.y * 32}}"
-                    width="{{zone.width * 32}}"
-                    height="{{zone.height * 32}}" 
+                    ng-attr-x="{{zone.x * 32}}"
+                    ng-attr-y="{{zone.y * 32}}"
+                    ng-attr-width="{{zone.width * 32}}"
+                    ng-attr-height="{{zone.height * 32}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <circle ng-switch-when="circle"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    cx="{{zone.cx * 32}}"
-                    cy="{{zone.cy * 32}}"
-                    r="{{zone.r * 32}}"
+                    ng-attr-cx="{{zone.cx * 32}}"
+                    ng-attr-cy="{{zone.cy * 32}}"
+                    ng-attr-r="{{zone.r * 32}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polygon ng-switch-when="polygon"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polyline ng-switch-when="polyline"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                 </g>
@@ -83,44 +83,44 @@
                 <g ng-switch="zone.shape">
 
                   <rect ng-switch-when="rect"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    x="{{zone.x * 32}}"
-                    y="{{zone.y * 32}}"
-                    width="{{zone.width * 32}}"
-                    height="{{zone.height * 32}}" 
+                    ng-attr-x="{{zone.x * 32}}"
+                    ng-attr-y="{{zone.y * 32}}"
+                    ng-attr-width="{{zone.width * 32}}"
+                    ng-attr-height="{{zone.height * 32}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <circle ng-switch-when="circle"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    cx="{{zone.cx * 32}}"
-                    cy="{{zone.cy * 32}}"
-                    r="{{zone.r * 32}}"
+                    ng-attr-cx="{{zone.cx * 32}}"
+                    ng-attr-cy="{{zone.cy * 32}}"
+                    ng-attr-r="{{zone.r * 32}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polygon ng-switch-when="polygon"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polyline ng-switch-when="polyline"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                 </g>
@@ -135,13 +135,13 @@
 
                 <!-- The aura -->
                 <rect
-                  x="{{ (combatant.x - combatant.aura_size) * 32 }}"
-                  y="{{ (combatant.y - combatant.aura_size) * 32 }}"
-                  width="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
-                  height="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
-                  fill="{{combatant.aura_color}}"
+                  ng-attr-x="{{ (combatant.x - combatant.aura_size) * 32 }}"
+                  ng-attr-y="{{ (combatant.y - combatant.aura_size) * 32 }}"
+                  ng-attr-width="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
+                  ng-attr-height="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
+                  ng-attr-fill="{{combatant.aura_color}}"
                   fill-opacity="0.3"
-                  stroke="{{combatant.aura_color}}"
+                  ng-attr-stroke="{{combatant.aura_color}}"
                   stoke-width="10"
                   stoke-opacity="1"
                   rx="16"
@@ -150,11 +150,11 @@
 
                 <!-- Combatant rectangle itself -->
                 <rect
-                  x="{{combatant.x * 32}}"
-                  y="{{combatant.y * 32}}"
-                  width="{{combatant.size * 32}}"
-                  height="{{combatant.size * 32}}"
-                  fill="{{combatant.color}}"
+                  ng-attr-x="{{combatant.x * 32}}"
+                  ng-attr-y="{{combatant.y * 32}}"
+                  ng-attr-width="{{combatant.size * 32}}"
+                  ng-attr-height="{{combatant.size * 32}}"
+                  ng-attr-fill="{{combatant.color}}"
                   rx="16"
                   ng-mousedown="selectCombatant(combatant, $event)"
                 />
@@ -163,10 +163,10 @@
                 <g ng-switch="!! combatant.token_image">
                   <image
                     ng-switch-when="true"
-                    x="{{ (combatant.x + 0.15) * 32 }}"
-                    y="{{ (combatant.y + 0.15) * 32 }}"
-                    width="{{ (combatant.size - 0.3) * 32 }}"
-                    height="{{ (combatant.size - 0.3) * 32 }}"
+                    ng-attr-x="{{ (combatant.x + 0.15) * 32 }}"
+                    ng-attr-y="{{ (combatant.y + 0.15) * 32 }}"
+                    ng-attr-width="{{ (combatant.size - 0.3) * 32 }}"
+                    ng-attr-height="{{ (combatant.size - 0.3) * 32 }}"
                     xlink:href="{{combatant.token_image}}"
                     pointer-events="none"
                   />
@@ -175,10 +175,10 @@
 
                 <!-- if selected, the rotating border -->
                 <rect
-                  x="{{combatant.x * 32}}"
-                  y="{{combatant.y * 32}}"
-                  width="{{combatant.size * 32}}"
-                  height="{{combatant.size * 32}}"
+                  ng-attr-x="{{combatant.x * 32}}"
+                  ng-attr-y="{{combatant.y * 32}}"
+                  ng-attr-width="{{combatant.size * 32}}"
+                  ng-attr-height="{{combatant.size * 32}}"
                   fill="none"
                   rx="16"
                   stroke="blue"
@@ -201,47 +201,47 @@
                 <g ng-switch="zone.shape">
 
                   <rect ng-switch-when="rect"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    x="{{zone.x * 32}}"
-                    y="{{zone.y * 32}}"
-                    width="{{zone.width * 32}}"
-                    height="{{zone.height * 32}}" 
+                    ng-attr-x="{{zone.x * 32}}"
+                    ng-attr-y="{{zone.y * 32}}"
+                    ng-attr-width="{{zone.width * 32}}"
+                    ng-attr-height="{{zone.height * 32}}"
                     pointer-events="{{ pointerEvents(zone); }}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <circle ng-switch-when="circle"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    cx="{{zone.cx * 32}}"
-                    cy="{{zone.cy * 32}}"
-                    r="{{zone.r * 32}}"
+                    ng-attr-cx="{{zone.cx * 32}}"
+                    ng-attr-cy="{{zone.cy * 32}}"
+                    ng-attr-r="{{zone.r * 32}}"
                     pointer-events="{{ pointerEvents(zone); }}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polygon ng-switch-when="polygon"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     pointer-events="none"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polyline ng-switch-when="polyline"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     pointer-events="none"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
@@ -254,14 +254,14 @@
           </g>
         </g>
 
-        <g ng-controller="EditZoneCtrl" transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
+        <g ng-controller="EditZoneCtrl" ng-attr-transform="translate({{ translate.x }} {{translate.y}}) scale({{ scale }})">
           <g ng-switch="zone.shape">
 
             <g ng-switch-when="rect" ng-controller="EditRectZoneCtrl">
               <circle
                 ng-repeat="point in points"
-                cx="{{point.x * 32}}"
-                cy="{{point.y * 32}}"
+                ng-attr-cx="{{point.x * 32}}"
+                ng-attr-cy="{{point.y * 32}}"
                 r="8"
                 fill="white"
                 stroke="black"
@@ -273,8 +273,8 @@
             <g ng-switch-when="circle" ng-controller="EditCircleZoneCtrl">
               <circle
                 ng-repeat="point in points"
-                cx="{{point.x * 32}}"
-                cy="{{point.y * 32}}"
+                ng-attr-cx="{{point.x * 32}}"
+                ng-attr-cy="{{point.y * 32}}"
                 r="8"
                 fill="white"
                 stroke="black"
@@ -287,8 +287,8 @@
 
               <circle
                 ng-repeat="point in midPoints"
-                cx="{{point.x * 32}}"
-                cy="{{point.y * 32}}"
+                ng-attr-cx="{{point.x * 32}}"
+                ng-attr-cy="{{point.y * 32}}"
                 r="8"
                 fill="white"
                 fill-opacity="0.5"
@@ -300,8 +300,8 @@
 
               <circle
                 ng-repeat="point in points"
-                cx="{{point.x * 32}}"
-                cy="{{point.y * 32}}"
+                ng-attr-cx="{{point.x * 32}}"
+                ng-attr-cy="{{point.y * 32}}"
                 r="8"
                 fill="white"
                 stroke="black"
@@ -311,8 +311,8 @@
 
               <image
                 ng-repeat="point in points"
-                x="{{ point.x * 32 + 8 }}"
-                y="{{ point.y * 32 - 16 }}"
+                ng-attr-x="{{ point.x * 32 + 8 }}"
+                ng-attr-y="{{ point.y * 32 - 16 }}"
                 width="8"
                 height="8"
                 xlink:href="/images/red-circle-x.png"
@@ -326,8 +326,8 @@
 
               <circle
                 ng-repeat="point in midPoints"
-                cx="{{point.x * 32}}"
-                cy="{{point.y * 32}}"
+                ng-attr-cx="{{point.x * 32}}"
+                ng-attr-cy="{{point.y * 32}}"
                 r="8"
                 fill="white"
                 fill-opacity="0.5"
@@ -339,8 +339,8 @@
 
               <circle
                 ng-repeat="point in points"
-                cx="{{point.x * 32}}"
-                cy="{{point.y * 32}}"
+                ng-attr-cx="{{point.x * 32}}"
+                ng-attr-cy="{{point.y * 32}}"
                 r="8"
                 fill="white"
                 stroke="black"
@@ -350,8 +350,8 @@
 
               <image
                 ng-repeat="point in points"
-                x="{{ point.x * 32 + 8 }}"
-                y="{{ point.y * 32 - 16 }}"
+                ng-attr-x="{{ point.x * 32 + 8 }}"
+                ng-attr-y="{{ point.y * 32 - 16 }}"
                 width="8"
                 height="8"
                 xlink:href="/images/red-circle-x.png"
@@ -368,32 +368,32 @@
 
         <g ng-controller="MeasureToolCtrl" ng-show="toolData.measuring" transform="translate({{ translate.x }} {{translate.y }}) scale({{ scale }})">
           <line
-            x1="{{ startX() }}"
-            y1="{{ startY() }}"
-            x2="{{ stopX() }}"
-            y2="{{ stopY() }}"
+            ng-attr-x1="{{ startX() }}"
+            ng-attr-y1="{{ startY() }}"
+            ng-attr-x2="{{ stopX() }}"
+            ng-attr-y2="{{ stopY() }}"
             stroke="black" stroke-width="9" stroke-linecap="round" />
           <line
-            x1="{{ startX() }}"
-            y1="{{ startY() }}"
-            x2="{{ stopX() }}"
-            y2="{{ stopY() }}"
+            ng-attr-x1="{{ startX() }}"
+            ng-attr-y1="{{ startY() }}"
+            ng-attr-x2="{{ stopX() }}"
+            ng-attr-y2="{{ stopY() }}"
             stroke="white" stroke-width="5" stroke-linecap="round" />
           <rect
-            x="{{ midx() * 32 - (3 * (1 / scale) ) }}"
-            y="{{ midy() * 32 - (16 * (1 / scale) ) }}"
-            width="{{ (distance().toString().length * 12) / scale }}"
-            height="{{ 24 / scale }}"
-            rx="{{8 / scale }}"
-            ry="{{8 / scale }}"
+            ng-attr-x="{{ midx() * 32 - (3 * (1 / scale) ) }}"
+            ng-attr-y="{{ midy() * 32 - (16 * (1 / scale) ) }}"
+            ng-attr-width="{{ (distance().toString().length * 12) / scale }}"
+            ng-attr-height="{{ 24 / scale }}"
+            ng-attr-rx="{{8 / scale }}"
+            ng-attr-ry="{{8 / scale }}"
           />
           <text
-            x="{{ midx() * 32 * scale }}"
-            y="{{ midy() * 32 * scale }}"
+            ng-attr-x="{{ midx() * 32 * scale }}"
+            ng-attr-y="{{ midy() * 32 * scale }}"
             fill="white"
             stroke="white"
             font-size="16"
-            transform="scale({{ 1 / scale }})"
+            ng-attr-transform="scale({{ 1 / scale }})"
           >{{ toolData.distance() }}</text>
         </g>
     </svg>
