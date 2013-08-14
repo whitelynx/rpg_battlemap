@@ -21,7 +21,7 @@
 	created :: time(),
 	updated :: time()
 }).
-	
+
 -record(rpgb_rec_battlemap, {
 	id :: 'undefined' | pos_integer(),
 	name :: binary(),
@@ -32,8 +32,8 @@
 	translate_x = 0 :: integer(),
 	translate_y = 0 :: integer(),
 	grid_spacing = 32 :: pos_integer(),
-	background_color = <<"gray">> :: binary(),
-	gridline_color = <<"black">> :: binary(),
+	background_color = <<"#888888">> :: binary(),
+	gridline_color = <<"#000000">> :: binary(),
 	grid_opacity = 0.5 :: float(),
 	layer_ids = [] :: [pos_integer()], % list is bottom up order
 	combatant_ids = [] :: [pos_integer()],
@@ -63,10 +63,10 @@
 	type = 'zone' :: 'zone' | 'scenery' | 'aura',
 	layer_id :: pos_integer(),
 	rotation = 0 :: float(),
-	stroke_color = <<"black">> :: binary(),
+	stroke_color = <<"#000000">> :: binary(),
 	stroke_width = 5 :: non_neg_integer(),
 	stroke_opacity = 1 :: float(),
-	fill_color = <<"green">> :: binary(),
+	fill_color = <<"008800">> :: binary(),
 	fill_opacity = 1 :: float(),
 	shape = 'rect' :: 'rect' | 'circle' | 'ellipse' | 'line' | 'polyline' | 'polygon' | 'path',
 	% polygon, polyline
