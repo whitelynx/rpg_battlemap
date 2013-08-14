@@ -11,7 +11,7 @@
                     width="32" height="32" fill-opacity="0"
              ng-attr-stroke="{{ map.gridline_color}}"
              stroke-width="2"
-             ng-attr-stroke-opacity="{{ map.grid_opacity }}" />
+             stroke-opacity="{{ map.grid_opacity }}" />
 
             </pattern>
         </defs>
@@ -30,10 +30,10 @@
 
                   <rect ng-switch-when="rect"
                     ng-attr-fill="{{zone.fill_color}}"
-                    ng-attr-fill-opacity="{{zone.fill_opacity}}"
+                    fill-opacity="{{zone.fill_opacity}}"
                     ng-attr-stroke="{{zone.stroke_color}}"
-                    ng-attr-stroke-width="{{zone.stroke_width}}"
-                    ng-attr-stroke-opacity="{{zone.stroke_opacity}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
                     ng-attr-x="{{zone.x * 32}}"
                     ng-attr-y="{{zone.y * 32}}"
                     ng-attr-width="{{zone.width * 32}}"
@@ -42,10 +42,10 @@
 
                   <circle ng-switch-when="circle"
                     ng-attr-fill="{{zone.fill_color}}"
-                    ng-attr-fill-opacity="{{zone.fill_opacity}}"
+                    fill-opacity="{{zone.fill_opacity}}"
                     ng-attr-stroke="{{zone.stroke_color}}"
-                    ng-attr-stroke-width="{{zone.stroke_width}}"
-                    ng-attr-stroke-opacity="{{zone.stroke_opacity}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
                     ng-attr-cx="{{zone.cx * 32}}"
                     ng-attr-cy="{{zone.cy * 32}}"
                     ng-attr-r="{{zone.r * 32}}"
@@ -53,19 +53,19 @@
 
                   <polygon ng-switch-when="polygon"
                     ng-attr-fill="{{zone.fill_color}}"
-                    ng-attr-fill-opacity="{{zone.fill_opacity}}"
+                    fill-opacity="{{zone.fill_opacity}}"
                     ng-attr-stroke="{{zone.stroke_color}}"
-                    ng-attr-stroke-width="{{zone.stroke_width}}"
-                    ng-attr-stroke-opacity="{{zone.stroke_opacity}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
                     ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polyline ng-switch-when="polyline"
                     ng-attr-fill="{{zone.fill_color}}"
-                    ng-attr-fill-opacity="{{zone.fill_opacity}}"
+                    fill-opacity="{{zone.fill_opacity}}"
                     ng-attr-stroke="{{zone.stroke_color}}"
-                    ng-attr-stroke-width="{{zone.stroke_width}}"
-                    ng-attr-stroke-opacity="{{zone.stroke_opacity}}"
+                    stroke-width="{{zone.stroke_width}}"
+                    stroke-opacity="{{zone.stroke_opacity}}"
                     ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
@@ -83,44 +83,44 @@
                 <g ng-switch="zone.shape">
 
                   <rect ng-switch-when="rect"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    x="{{zone.x * 32}}"
-                    y="{{zone.y * 32}}"
-                    width="{{zone.width * 32}}"
-                    height="{{zone.height * 32}}" 
+                    ng-attr-x="{{zone.x * 32}}"
+                    ng-attr-y="{{zone.y * 32}}"
+                    ng-attr-width="{{zone.width * 32}}"
+                    ng-attr-height="{{zone.height * 32}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <circle ng-switch-when="circle"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    cx="{{zone.cx * 32}}"
-                    cy="{{zone.cy * 32}}"
-                    r="{{zone.r * 32}}"
+                    ng-attr-cx="{{zone.cx * 32}}"
+                    ng-attr-cy="{{zone.cy * 32}}"
+                    ng-attr-r="{{zone.r * 32}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polygon ng-switch-when="polygon"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polyline ng-switch-when="polyline"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                 </g>
@@ -163,10 +163,10 @@
                 <g ng-switch="!! combatant.token_image">
                   <image
                     ng-switch-when="true"
-                    x="{{ (combatant.x + 0.15) * 32 }}"
-                    y="{{ (combatant.y + 0.15) * 32 }}"
-                    width="{{ (combatant.size - 0.3) * 32 }}"
-                    height="{{ (combatant.size - 0.3) * 32 }}"
+                    ng-attr-x="{{ (combatant.x + 0.15) * 32 }}"
+                    ng-attr-y="{{ (combatant.y + 0.15) * 32 }}"
+                    ng-attr-width="{{ (combatant.size - 0.3) * 32 }}"
+                    ng-attr-height="{{ (combatant.size - 0.3) * 32 }}"
                     xlink:href="{{combatant.token_image}}"
                     pointer-events="none"
                   />
@@ -201,47 +201,47 @@
                 <g ng-switch="zone.shape">
 
                   <rect ng-switch-when="rect"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    x="{{zone.x * 32}}"
-                    y="{{zone.y * 32}}"
-                    width="{{zone.width * 32}}"
-                    height="{{zone.height * 32}}" 
+                    ng-attr-x="{{zone.x * 32}}"
+                    ng-attr-y="{{zone.y * 32}}"
+                    ng-attr-width="{{zone.width * 32}}"
+                    ng-attr-height="{{zone.height * 32}}"
                     pointer-events="{{ pointerEvents(zone); }}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <circle ng-switch-when="circle"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    cx="{{zone.cx * 32}}"
-                    cy="{{zone.cy * 32}}"
-                    r="{{zone.r * 32}}"
+                    ng-attr-cx="{{zone.cx * 32}}"
+                    ng-attr-cy="{{zone.cy * 32}}"
+                    ng-attr-r="{{zone.r * 32}}"
                     pointer-events="{{ pointerEvents(zone); }}"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polygon ng-switch-when="polygon"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     pointer-events="none"
                     ng-mousedown="setToolOverride(zone, $event)" />
 
                   <polyline ng-switch-when="polyline"
-                    fill="{{zone.fill_color}}"
+                    ng-attr-fill="{{zone.fill_color}}"
                     fill-opacity="{{zone.fill_opacity / 3.0}}"
-                    stroke="{{zone.stroke_color}}"
+                    ng-attr-stroke="{{zone.stroke_color}}"
                     stroke-width="{{zone.stroke_width}}"
                     stroke-opacity="{{zone.stroke_opacity}}"
-                    points="{{pointString(zone)}}"
+                    ng-attr-points="{{pointString(zone)}}"
                     pointer-events="none"
                     ng-mousedown="setToolOverride(zone, $event)" />
 

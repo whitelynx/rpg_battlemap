@@ -1250,7 +1250,7 @@ Controllers.controller("MeasureToolCtrl", function($scope, $rootScope, Tool){
 			return red[prop] || false;
 		};
 
-		var reduced = args.reduce(reduceFunc, $scope.toolData);
+		var reduced = args.reduce(reduceFunc, $scope.toolData || {});
 		return reduced || def;
 	};
 
@@ -1293,7 +1293,7 @@ Controllers.controller("MeasureToolCtrl", function($scope, $rootScope, Tool){
 	};
 
 	$scope.distance = function(){
-		if($scope.toolData.start){
+		if(($scope.toolData || {}).measuring){
 			return $scope.toolData.distance();
 		}
 		return 0;
