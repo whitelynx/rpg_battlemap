@@ -66,9 +66,14 @@
 			</li>
 
 			<li>
-			<layer for="selCombatantLayer">Layer</layer>
+				<label for="selCombatantLayer">Layer</layer>
 				<select name="selCombatantLayer" ng-model="combatants.selected.layer_id" ng-change="saveCombatant($event, combatants.selected)" ng-options="layer.id as layer.name for layer in layers" ng-click="stopPropagation($event)">
 				</select>
+			</li>
+
+			<li>
+				<input ng-model="combatants.selected.invisible" type="checkbox" name="selCombatantInvisible" ng-change="saveCombatant($event, combatants.selected)" ng-click="stopPropagation($event)" />
+				<label style="display:inline;" for="selCombatantInvisible">Invisible</label>
 			</li>
 
 			<li class="divider"></li>

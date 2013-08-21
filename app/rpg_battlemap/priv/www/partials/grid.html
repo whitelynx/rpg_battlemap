@@ -131,7 +131,7 @@
 
             <g ng-controller="ListCombatantsCtrl">
 
-              <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id">
+              <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id && ( combatant.owner == user || ! combatant.invisible )">
 
                 <!-- The aura -->
                 <rect
@@ -140,7 +140,7 @@
                   ng-attr-width="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
                   ng-attr-height="{{ (combatant.size + 2 * combatant.aura_size) * 32 }}"
                   ng-attr-fill="{{combatant.aura_color}}"
-                  fill-opacity="0.3"
+                  fill-opacity="{{ 0.3 * ( combatant.aura_size > 0) }}"
                   ng-attr-stroke="{{combatant.aura_color}}"
                   stoke-width="10"
                   stoke-opacity="1"
@@ -157,6 +157,9 @@
                   ng-attr-fill="{{combatant.color}}"
                   rx="16"
                   ng-mousedown="selectCombatant(combatant, $event)"
+                  stroke="{{combatant.color}}"
+                  stroke-width="{{5 * combatant.invisible}}"
+                  fill-opacity="{{ 1 - (combatant.invisible) }}"
                 />
 
                 <!-- Combatants that have token images -->

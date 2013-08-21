@@ -12,7 +12,13 @@ make_json(Combatant) ->
 	Url = rpgb:get_url(["maps", 
 		integer_to_list(Combatant#rpgb_rec_combatant.battlemap_id),
 		"combatants", integer_to_list(Combatant#rpgb_rec_combatant.id)]),
-	Combatant:to_json([{url, Url}]).
+	Owner = case rpgb_data:get_by_id(rpgb_rec_user, Combatant#rpgb_rec_combatant.owner_id) of
+		{ok, User} ->
+			User#rpgb_rec_user.email;
+		_ ->
+			null
+	end,
+	Combatant:to_json([{url, Url}, owner_id, {owner, Owner}]).
 
 delete(#rpgb_rec_combatant{battlemap_id = MapId} = Combatant) ->
 	case rpgb_data:get_by_id(rpgb_rec_battlemap, MapId) of
