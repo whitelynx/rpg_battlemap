@@ -1407,13 +1407,28 @@ Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
 		var inc = 0.1
 		var delta = ev.deltaY > 0 ? inc : (-1 * inc);
 		var newZoom = $rootScope.scale - delta;
-		$rootScope.scale += delta;
+
 		if(newZoom < 0.1){
 			newZoom = 0.1;
 		} else if(newZoom > 3){
 			newZoom = 3
 		}
+
+		var beforeCells = $scope.pixelsToCells(ev.originalEvent.offsetX, ev.originalEvent.offsetY);
+
+		// Apply Scaling
 		$rootScope.scale = newZoom;
+
+		var afterCells = $scope.pixelsToCells(ev.originalEvent.offsetX, ev.originalEvent.offsetY);
+
+		var trans = [
+			beforeCells[0] - afterCells[0],
+			beforeCells[1] - afterCells[1]
+		];
+
+		$scope.translate.x -= trans[0] * 32 * newZoom;
+		$scope.translate.y -= trans[1] * 32 * newZoom;
+
 		ev.preventDefault();
 		return false;
 	}
