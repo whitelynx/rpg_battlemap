@@ -133,6 +133,12 @@
 
               <g ng-repeat="combatant in combatants" ng-show="layer.id == combatant.layer_id && ( combatant.owner == user || ! combatant.invisible )">
 
+                <!-- Combatant Mask -->
+                <mask maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" id="mask-{{combatant.id}}">
+                <rect id="svg_1" height="1" width="1" y="0" x="0" stroke-width="0" fill="#ffffff" ng-attr-rx="{{.5 / combatant.size}}"/>
+                </mask>
+
+
                 <!-- The aura -->
                 <rect
                   ng-attr-x="{{ (combatant.x - combatant.aura_size) * 32 }}"
@@ -163,18 +169,15 @@
                 />
 
                 <!-- Combatants that have token images -->
-                <g ng-switch="!! combatant.token_image">
-                  <image
-                    ng-switch-when="true"
-                    ng-attr-x="{{ (combatant.x + 0.15) * 32 }}"
-                    ng-attr-y="{{ (combatant.y + 0.15) * 32 }}"
-                    ng-attr-width="{{ (combatant.size - 0.3) * 32 }}"
-                    ng-attr-height="{{ (combatant.size - 0.3) * 32 }}"
+                <image
                     xlink:href="{{combatant.token_image}}"
+                    ng-attr-x="{{combatant.x * 32}}"
+                    ng-attr-y="{{combatant.y * 32}}"
+                    ng-attr-width="{{combatant.size * 32}}"
+                    ng-attr-height="{{combatant.size * 32}}"
                     pointer-events="none"
-                  />
-                  <g ng-switch-when="false"></g>
-                </g>
+                    style="mask: url(#mask-{{combatant.id}})"
+                />
 
                 <!-- if selected, the rotating border -->
                 <rect
