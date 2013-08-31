@@ -1339,16 +1339,27 @@ Controllers.controller("HeaderCtrl", function($scope) {
 		}
 	};
 
+	$scope.$on('topbar-closed', function()
+	{
+		$scope.handleToggle();
+		$("#top-bar").collapse('hide');
+	});
+
 	$scope.logit = function(){
 		console.log('der thangs', arguments);
 	}
 });
 
-Controllers.controller("GridCtrl", function($scope, $rootScope, MapSocket) {
+Controllers.controller("GridCtrl", function($scope, $rootScope, $timeout, MapSocket) {
 	var header = $("#main-header");
 	var topBar = $("#top-bar");
 	var docElem = $(window);
 	var CELL_SIZE = 32;
+
+	$timeout(function()
+	{
+		$scope.$root.$broadcast('topbar-closed');
+	}, 1000);
 
 	function calcGridheight(buffer) {
 		buffer = buffer || header.height();
