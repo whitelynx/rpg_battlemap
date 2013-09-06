@@ -29,6 +29,16 @@ data_access_test_() ->
 		{"delete", fun() ->
 			?assertEqual({ok, 1}, rpgb_dets:delete(rpgb_rec_user, 1)),
 			?assertEqual([], dets:lookup(rpgb_dets, {rpgb_rec_user, 1}))
+		end},
+
+		{"update old records", fun() ->
+			Now = os:timestamp(),
+			OldUser = {rpgb_rec_user, 1, <<"goober@pants.com">>, <<"goober">>, Now, Now},
+			dets:insert(rpgb_dets, 	{{rpgb_rec_user, 1}, OldUser}),
+			ok = rpgb_dets:update_records(),
+			NewUser = #rpgb_rec_user{id = 1, name = <<"goober">>, email = <<"goober@pants.com">>, created = Now, updated = Now},
+			Got = rpgb_dets:get_by_id(rpgb_rec_user, 1),
+			?assertEqual({ok, NewUser}, Got)
 		end}
 
 	] end}.

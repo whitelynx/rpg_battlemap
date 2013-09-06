@@ -11,6 +11,7 @@
 
 % api
 -export([start_link/0, start_link/1, stop/0]).
+-export([update_records/0]).
 % gen_server
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
 	code_change/3]).
@@ -81,6 +82,19 @@ search(Type, Params) ->
       E
   end.
 
+%% @doc run after a record schema change. If the record schema schanges,
+%% this will do a generic transform in an attmept to get it back to good.
+%% this makes a few assumptions:
+%% 1: all entries in the dets are a record.
+%% 2: all records have an id as element 2, created as element last -1,
+%%    and updated as element last
+%% 3: all records have reasonable defaults.
+%% 4: updates to records always happen by adding a feild just before
+%%    created.
+%% 5: records never get smaller
+update_records() ->
+  gen_server:call(?MODULE, update_records, infinity).
+
 %% ====================================================================
 %% gen_server
 %% ====================================================================
@@ -108,6 +122,14 @@ init(Options) ->
 %% --------------------------------------------------------------------
 %% handle_call
 %% --------------------------------------------------------------------
+
+handle_call(update_records, _From, State) ->
+  % I'm not worryied about blocking this server since it doesn't do
+  % anything else.
+  TraverseFun = fun is_current_record/1,
+  Updated = dets:traverse(?dets_table, TraverseFun),
+  [dets:insert(?dets_table, Update) || Update <- Updated],
+  {reply, ok, State};
 
 handle_call(_Msg, _From, State) ->
 	{reply, {error, invalid}, State}.
@@ -174,3 +196,35 @@ build_match([{Key, Value} | Tail], Indexes, Rec) ->
       Rec1 = setelement(N, Rec, Value),
       build_match(Tail, Indexes, Rec1)
   end.
+
+is_current_record(Object) when is_atom(element(1, Object)) ->
+  % it's a counter, don't muck with it.
+  continue;
+is_current_record(Object) ->
+  {{Type, _Id} = Key, Value} = Object,
+  Fields = get_field_names(Type),
+  if
+    length(Fields) == size(Value) ->
+      continue;
+    true ->
+      Default = create_default(Type),
+      Updated = update_old_record(Value, Default),
+      {continue, {Key, Updated}}
+  end.
+
+create_default(rpgb_rec_user) -> #rpgb_rec_user{};
+create_default(rpgb_rec_user_group) -> #rpgb_rec_user_group{};
+create_default(rpgb_rec_battlemap) -> #rpgb_rec_battlemap{};
+create_default(rpgb_rec_layer) -> #rpgb_rec_layer{};
+create_default(rpgb_rec_zone) -> #rpgb_rec_zone{};
+create_default(rpgb_rec_combatant) -> #rpgb_rec_combatant{};
+create_default(rpgb_rec_character) -> #rpgb_rec_character{}.
+
+update_old_record(Old, Default) when is_tuple(Old), is_tuple(Default) ->
+  OldList = tuple_to_list(Old),
+  DefaultList = tuple_to_list(Default),
+  {OldHead, OldTimes} = lists:split(length(OldList) - 2, OldList),
+  {DefHead, _DefTimes} = lists:split(length(DefaultList) - 2, DefaultList),
+  {_AlreadySet, NewFields} = lists:split(length(OldHead), DefHead),
+  NewList = OldHead ++ NewFields ++ OldTimes,
+  list_to_tuple(NewList).
